@@ -2,9 +2,10 @@
   "extends": "../../tsconfig.base",
   "compilerOptions": {
     "outDir": "lib",
-    "rootDir": "src"
+    "rootDir": "src",
+    "emitDeclarationOnly": false,
+    "module": "commonjs",
+    "moduleResolution": "node"
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

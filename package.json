@@ -1,25 +1,40 @@
 {
   "name": "koishi-plugin-gl-bot",
   "description": "GleamSlime Koishi Rebot Plugins",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "contributors": [
+    "GleamSlime <gleamslime@163.com>"
+  ],
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "fl": "prettier --write . && eslint . --fix"
+  },
   "files": [
     "lib",
     "dist"
   ],
   "license": "MIT",
-  "scripts": {},
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "gleamslime",
+    "gl-bot"
   ],
   "devDependencies": {
-    "@koishijs/client": "^5.30.4"
+    "@koishijs/client": "^5.30.11",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@koishijs/plugin-console": "^5.30.4",
-    "koishi": "^4.18.7"
+    "@koishijs/plugin-console": "^5.30.11",
+    "koishi": "^4.18.9"
+  },
+  "koishi": {
+    "description": {
+      "zh": "GleamSlime Koishi 兽耳咖啡厅插件"
+    }
   }
 }

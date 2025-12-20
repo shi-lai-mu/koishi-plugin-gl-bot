@@ -1,18 +1,18 @@
-import { Context, Schema } from 'koishi'
-import { resolve } from 'path'
-import {} from '@koishijs/plugin-console'
+import { Context, Schema } from "koishi";
+import { resolve } from "path";
+import {} from "@koishijs/plugin-console";
 
-export const name = 'gl-bot'
+export const name = "gl-bot";
 
 export interface Config {}
 
-export const Config: Schema<Config> = Schema.object({})
+export const Config: Schema<Config> = Schema.object({});
 
 export function apply(ctx: Context) {
-  ctx.inject(['console'], (ctx) => {
+  ctx.inject(["console"], (ctx) => {
     ctx.console.addEntry({
-      dev: resolve(__dirname, '../client/index.ts'),
-      prod: resolve(__dirname, '../dist'),
-    })
-  })
+      dev: resolve(__dirname, "../client/index.ts"),
+      prod: resolve(__dirname, "../lib"),
+    });
+  });
 }
