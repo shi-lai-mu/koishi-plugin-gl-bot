@@ -8,8 +8,7 @@
     "declaration": true,
     "strict": false,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["lib", "dist", "node_modules"]

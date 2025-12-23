@@ -10,7 +10,8 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint .",
-    "fl": "prettier --write . && eslint . --fix"
+    "fl": "prettier --write . && eslint . --fix",
+    "build": "tsc -p tsconfig.test.json && cp -r src/queQiao/locale lib/queQiao/ || true"
   },
   "files": [
     "lib",
@@ -36,5 +37,9 @@
     "description": {
       "zh": "GleamSlime Koishi 兽耳咖啡厅插件"
     }
+  },
+  "dependencies": {
+    "rcon-client": "^4.2.5",
+    "ws": "^8.18.3"
   }
 }
