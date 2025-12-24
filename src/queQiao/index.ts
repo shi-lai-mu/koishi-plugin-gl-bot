@@ -9,6 +9,8 @@ import {
 } from "./values";
 import mcWss from "./mcwss";
 import { isString } from "lodash-es";
+import { IS_DEV } from "../constants";
+import { clearSessionContentToMcMessage } from "../utils";
 // import zhCN from "./locale/zh-CN.json";
 // import enUS from "./locale/en-US.json";
 const zhCN = require("./locale/zh-CN.json");
@@ -52,6 +54,7 @@ class MinecraftSyncMsg {
   private initialize() {
     this.setupRcon();
     this.setupWebSocket();
+    this.setupWatchChannel();
     this.setupMessageHandler();
     this.setupDisposeHandler();
     this.ctx.i18n.define("zh-CN", zhCN);
@@ -123,7 +126,7 @@ class MinecraftSyncMsg {
       this.broadcastToChannels("Websocket服务器连接成功!");
     }
 
-    if (process.env.NODE_ENV !== "development") {
+    if (!IS_DEV) {
       const msgData: WsMessageData = {
         api: "broadcast",
         data: {
@@ -215,6 +218,28 @@ class MinecraftSyncMsg {
     }
 
     logger.error("与Websocket服务器断通信时发生错误:", err);
+  }
+
+  private setupWatchChannel() {
+    this.ctx.on("message", async (session) => {
+      this.config.watchChannel.forEach((channel) => {
+        const [platform, channelId] = channel.split(":");
+        if (platform === session.platform && channelId === session.channelId) {
+          const msgData: WsMessageData = {
+            api: "broadcast",
+            data: {
+              message: [
+                {
+                  text: `[${session.event._data.group_name}] <${session.username}> ${clearSessionContentToMcMessage(session.content)}`,
+                  color: this.extractAndRemoveColor(this.config.joinMsg).color || "white",
+                },
+              ],
+            },
+          };
+          this.ws?.send(JSON.stringify(msgData));
+        }
+      });
+    });
   }
 
   private async reconnectWebSocket() {
@@ -475,6 +500,7 @@ namespace MinecraftSyncMsg {
     cmdprefix: string;
     hideConnect: boolean;
     locale: string;
+    watchChannel: string[];
   }
 
   export const Config: Schema<Config> = Schema.intersect([
@@ -483,6 +509,9 @@ namespace MinecraftSyncMsg {
     Schema.object({
       sendToChannel: Schema.array(String).description(
         "消息发送到目标群组格式{platform}:{groupId}"
+      ),
+      watchChannel: Schema.array(String).description(
+        "消息观察频道目标群组格式{platform}:{groupId}"
       ),
       sendprefix: Schema.string()
         .default(".#")

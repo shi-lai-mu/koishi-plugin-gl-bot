@@ -1,6 +1,7 @@
 import { Context, Logger, Schema } from "koishi";
 
 import { Config } from "./type";
+import { IS_DEV } from "../constants";
 import MinecraftSyncMsg from "../queQiao";
 
 const logger = new Logger("gl-bot");
@@ -23,6 +24,9 @@ export class GLBot {
 
   private globalCommand() {
     this.ctx.on("message", (session) => {
+      if (IS_DEV) {
+        // console.log(JSON.stringify(session, null, 2));
+      }
       switch (session.content) {
         case '环境变量':
           session.send(`当前环境变量：${Object.entries(process.env).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
