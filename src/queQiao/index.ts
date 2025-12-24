@@ -8,6 +8,7 @@ import {
   rconConf,
 } from "./values";
 import mcWss from "./mcwss";
+import { isString } from "lodash-es";
 // import zhCN from "./locale/zh-CN.json";
 // import enUS from "./locale/en-US.json";
 const zhCN = require("./locale/zh-CN.json");
@@ -91,7 +92,7 @@ class MinecraftSyncMsg {
 
   private connectWebSocket() {
     const headers = {
-      "x-self-name": this.config.serverName,
+      "x-self-name": encodeURIComponent(this.config.serverName),
       Authorization: `Bearer ${this.config.Token}`,
       "x-client-origin": "NOTkoishi",
     };
@@ -122,20 +123,21 @@ class MinecraftSyncMsg {
       this.broadcastToChannels("Websocket服务器连接成功!");
     }
 
-    const msgData: WsMessageData = {
-      api: "broadcast",
-      data: {
-        message: [
-          {
-            text: this.extractAndRemoveColor(this.config.joinMsg).output,
-            color:
-              this.extractAndRemoveColor(this.config.joinMsg).color || "gold",
-          },
-        ],
-      },
-    };
-
-    this.ws?.send(JSON.stringify(msgData));
+    if (process.env.NODE_ENV !== "development") {
+      const msgData: WsMessageData = {
+        api: "broadcast",
+        data: {
+          message: [
+            {
+              text: this.extractAndRemoveColor(this.config.joinMsg).output,
+              color:
+                this.extractAndRemoveColor(this.config.joinMsg).color || "gold",
+            },
+          ],
+        },
+      };
+      this.ws?.send(JSON.stringify(msgData));
+    }
   }
 
   private handleWsMessage(buffer: RawData) {
@@ -151,7 +153,12 @@ class MinecraftSyncMsg {
     }
 
     const eventName = data.event_name ? getListeningEvent(data.event_name) : "";
-    if (!getSubscribedEvents(this.config.event).includes(eventName)) return;
+    if (eventName == 'PlayerCommandPreprocessEvent') return
+
+    // console.log(data);
+    
+    
+    // if (!getSubscribedEvents(this.config.event).includes(eventName)) return;
 
     // let sendMsg = `[${data.server_name}](${eventTrans[eventName].name}) ${
     //   eventTrans[eventName].action ? data.player?.nickname + ' ' : ''
@@ -227,7 +234,7 @@ class MinecraftSyncMsg {
 
       try {
         const headers = {
-          "x-self-name": this.config.serverName,
+          "x-self-name": encodeURIComponent(this.config.serverName),
           Authorization: `Bearer ${this.config.Token}`,
           "x-client-origin": "koishi",
         };
@@ -419,11 +426,18 @@ class MinecraftSyncMsg {
     return { output: input, color: "" };
   }
 
-  private broadcastToChannels(message: string) {
+  private broadcastToChannels(message: string | h[]) {
     this.ctx.bots.forEach((bot: Bot) => {
       const channels = this.config.sendToChannel
         .filter((str) => str.includes(`${bot.platform}`))
         .map((str) => str.replace(`${bot.platform}:`, ""));
+    
+        console.log(this.config.sendToChannel);
+        
+      if (process.env.NODE_ENV === "development") {
+        logger.info(isString(message) ? message : message.map((el) => el.attrs.content).join(""));
+      }
+    
       bot.broadcast(channels, message, 0);
     });
   }

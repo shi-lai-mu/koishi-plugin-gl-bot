@@ -1,3 +1,3 @@
 <template>
-  <k-layout>扩展内容</k-layout>
+  <k-card>扩展内容22</k-card>
 </template>

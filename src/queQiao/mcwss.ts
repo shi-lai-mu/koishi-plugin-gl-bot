@@ -260,7 +260,8 @@ class mcWss {
       this.logger.error("Missing x-self-name header");
       return { valid: false };
     }
-    if (selfNameHeader !== this.conf.serverName) {
+    const decodedSelfName = decodeURIComponent(selfNameHeader as string);
+    if (decodedSelfName !== this.conf.serverName) {
       this.logger.error("Invalid x-self-name");
       return { valid: false };
     }

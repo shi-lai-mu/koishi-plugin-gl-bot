@@ -140,6 +140,7 @@ const eventMap = {
   NeoServerChatEvent: "AsyncPlayerChatEvent",
   MinecraftPlayerChatEvent: "AsyncPlayerChatEvent",
   BaseChatEvent: "AsyncPlayerChatEvent",
+  PlayerChatEvent: 'AsyncPlayerChatEvent',
 
   PlayerCommandPreprocessEvent: "PlayerCommandPreprocessEvent",
   ServerCommandMessageEvent: "PlayerCommandPreprocessEvent",
