@@ -1,1 +1,1 @@
-export * from "./game.mc";
+export * from './game.mc';

@@ -1,5 +1,3 @@
-import MinecraftSyncMsg from "../queQiao";
+import MinecraftSyncMsg from '../queQiao';
 
-export interface Config extends MinecraftSyncMsg.Config {
-
-}
+export interface Config extends MinecraftSyncMsg.Config {}

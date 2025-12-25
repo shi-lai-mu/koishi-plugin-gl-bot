@@ -1,4 +1,4 @@
-import { Schema } from "koishi";
+import { Schema } from 'koishi';
 
 // 放在主逻辑里面很碍眼的东西
 export enum mcEvent {
@@ -9,7 +9,7 @@ export enum mcEvent {
   PlayerQuitEvent = 1 << 4,
 }
 
-export interface wsConf {
+export interface WsConf {
   wsServer: boolean | string;
   wsHost: string;
   wsPort: number;
@@ -21,33 +21,33 @@ export interface wsConf {
   maxReconnectInterval: number;
 }
 
-export const wsConf = Schema.object({
-  wsServer: Schema.union(["客户端", "服务端"])
-    .default("客户端")
-    .description("Websocket端选择"),
+export const WsConf = Schema.object({
+  wsServer: Schema.union(['客户端', '服务端'])
+    .default('客户端')
+    .description('Websocket端选择'),
   wsHost: Schema.string()
-    .default("127.0.0.1")
-    .description("websocket服务器的地址(服务器监听地址)"),
+    .default('127.0.0.1')
+    .description('websocket服务器的地址(服务器监听地址)'),
   wsPort: Schema.number()
     .default(8080)
-    .description("websocket服务器的端口(服务器监听端口)"),
-  Token: Schema.string().description("websocket服务器的验证Token"),
-  serverName: Schema.string().description("鹊桥配置文件中对应的server_name"),
+    .description('websocket服务器的端口(服务器监听端口)'),
+  Token: Schema.string().description('websocket服务器的验证Token'),
+  serverName: Schema.string().description('鹊桥配置文件中对应的server_name'),
   joinMsg: Schema.string()
-    .default("[客户端] 连接成功！")
-    .description("连接服务的成功时发送的消息(&颜色单词&可以设置颜色)"),
-  event: Schema.bitset(mcEvent).description("选择需要监听的事件"),
+    .default('[客户端] 连接成功！')
+    .description('连接服务的成功时发送的消息(&颜色单词&可以设置颜色)'),
+  event: Schema.bitset(mcEvent).description('选择需要监听的事件'),
   maxReconnectCount: Schema.number()
     .default(20)
-    .description("[仅客户端生效]客户端最大重连次数"),
+    .description('[仅客户端生效]客户端最大重连次数'),
   maxReconnectInterval: Schema.number()
     .default(60000)
-    .description("[仅客户端生效]客户端单次重连时间(ms)"),
+    .description('[仅客户端生效]客户端单次重连时间(ms)'),
 })
   .collapse()
-  .description("Websocket配置");
+  .description('Websocket配置');
 
-export interface rconConf {
+export interface RconConf {
   rconEnable: boolean;
   rconServerHost: string;
   rconServerPort: number;
@@ -58,39 +58,39 @@ export interface rconConf {
   cannotCmd: string[];
 }
 
-export const rconConf = Schema.object({
-  rconEnable: Schema.boolean().default(true).description("开启RCON功能"),
+export const RconConf = Schema.object({
+  rconEnable: Schema.boolean().default(true).description('开启RCON功能'),
   rconServerHost: Schema.string()
-    .default("127.0.0.1")
-    .description("rcon服务器地址"),
+    .default('127.0.0.1')
+    .description('rcon服务器地址'),
   rconServerPort: Schema.number()
     .default(25575)
-    .description("rcon服务器地址端口"),
+    .description('rcon服务器地址端口'),
   rconPassword: Schema.string()
-    .role("secret")
-    .description("rcon服务器的密码(推荐设置)"),
+    .role('secret')
+    .description('rcon服务器的密码(推荐设置)'),
   alluser: Schema.boolean()
     .default(false)
-    .description("所有用户可用(开启后下面的配置失效)"),
+    .description('所有用户可用(开启后下面的配置失效)'),
   superuser: Schema.array(String).description(
-    "超级用户的ID，可以使用RCON所有命令"
+    '超级用户的ID，可以使用RCON所有命令',
   ),
   commonCmd: Schema.array(String)
-    .default(["list", "spigot:tps"])
-    .description("普通用户可以使用的命令"),
+    .default(['list', 'spigot:tps'])
+    .description('普通用户可以使用的命令'),
   cannotCmd: Schema.array(String)
-    .default(["restart", "stop"])
-    .description("不能使用的命令"),
+    .default(['restart', 'stop'])
+    .description('不能使用的命令'),
 })
   .collapse()
-  .description("RCON配置");
+  .description('RCON配置');
 
 export const eventList = [
-  "AsyncPlayerChatEvent",
-  "PlayerCommandPreprocessEvent",
-  "PlayerDeathEvent",
-  "PlayerJoinEvent",
-  "PlayerQuitEvent",
+  'AsyncPlayerChatEvent',
+  'PlayerCommandPreprocessEvent',
+  'PlayerDeathEvent',
+  'PlayerJoinEvent',
+  'PlayerQuitEvent',
 ];
 // export const eventTrans = {
 //     AsyncPlayerChatEvent: {
@@ -119,9 +119,9 @@ export const eventList = [
 export function getSubscribedEvents(binaryInput: number): string[] {
   const subscribedEvents: string[] = [];
   const eventValues = Object.values(mcEvent).filter(
-    (value) => typeof value === "number"
+    value => typeof value === 'number',
   ) as number[];
-  const eventNames = Object.keys(mcEvent).filter((key) => isNaN(Number(key)));
+  const eventNames = Object.keys(mcEvent).filter(key => isNaN(Number(key)));
 
   for (let i = 0; i < eventValues.length; i++) {
     if ((binaryInput & eventValues[i]) !== 0) {
@@ -134,49 +134,49 @@ export function getSubscribedEvents(binaryInput: number): string[] {
 
 // 事件映射变量
 const eventMap = {
-  AsyncPlayerChatEvent: "AsyncPlayerChatEvent",
-  ServerMessageEvent: "AsyncPlayerChatEvent",
-  ServerChatEvent: "AsyncPlayerChatEvent",
-  NeoServerChatEvent: "AsyncPlayerChatEvent",
-  MinecraftPlayerChatEvent: "AsyncPlayerChatEvent",
-  BaseChatEvent: "AsyncPlayerChatEvent",
+  AsyncPlayerChatEvent: 'AsyncPlayerChatEvent',
+  ServerMessageEvent: 'AsyncPlayerChatEvent',
+  ServerChatEvent: 'AsyncPlayerChatEvent',
+  NeoServerChatEvent: 'AsyncPlayerChatEvent',
+  MinecraftPlayerChatEvent: 'AsyncPlayerChatEvent',
+  BaseChatEvent: 'AsyncPlayerChatEvent',
   PlayerChatEvent: 'AsyncPlayerChatEvent',
 
-  PlayerCommandPreprocessEvent: "PlayerCommandPreprocessEvent",
-  ServerCommandMessageEvent: "PlayerCommandPreprocessEvent",
-  CommandEvent: "PlayerCommandPreprocessEvent",
-  NeoCommandEvent: "PlayerCommandPreprocessEvent",
-  BasePlayerCommandEvent: "PlayerCommandPreprocessEvent",
-  PlayerCommandEvent: "PlayerCommandPreprocessEvent",
+  PlayerCommandPreprocessEvent: 'PlayerCommandPreprocessEvent',
+  ServerCommandMessageEvent: 'PlayerCommandPreprocessEvent',
+  CommandEvent: 'PlayerCommandPreprocessEvent',
+  NeoCommandEvent: 'PlayerCommandPreprocessEvent',
+  BasePlayerCommandEvent: 'PlayerCommandPreprocessEvent',
+  PlayerCommandEvent: 'PlayerCommandPreprocessEvent',
 
-  PlayerDeathEvent: "PlayerDeathEvent", // Spigot 与 Forge 同名
-  NeoPlayerDeathEvent: "PlayerDeathEvent",
-  ServerLivingEntityAfterDeathEvent: "PlayerDeathEvent",
-  BaseDeathEvent: "PlayerDeathEvent",
+  PlayerDeathEvent: 'PlayerDeathEvent', // Spigot 与 Forge 同名
+  NeoPlayerDeathEvent: 'PlayerDeathEvent',
+  ServerLivingEntityAfterDeathEvent: 'PlayerDeathEvent',
+  BaseDeathEvent: 'PlayerDeathEvent',
 
-  PlayerJoinEvent: "PlayerJoinEvent",
-  ServerPlayConnectionJoinEvent: "PlayerJoinEvent",
-  PlayerLoggedInEvent: "PlayerJoinEvent",
-  NeoPlayerLoggedInEvent: "PlayerJoinEvent",
-  MinecraftPlayerJoinEvent: "PlayerJoinEvent",
-  BaseJoinEvent: "PlayerJoinEvent",
+  PlayerJoinEvent: 'PlayerJoinEvent',
+  ServerPlayConnectionJoinEvent: 'PlayerJoinEvent',
+  PlayerLoggedInEvent: 'PlayerJoinEvent',
+  NeoPlayerLoggedInEvent: 'PlayerJoinEvent',
+  MinecraftPlayerJoinEvent: 'PlayerJoinEvent',
+  BaseJoinEvent: 'PlayerJoinEvent',
 
-  PlayerQuitEvent: "PlayerQuitEvent",
-  ServerPlayConnectionDisconnectEvent: "PlayerQuitEvent",
-  PlayerLoggedOutEvent: "PlayerQuitEvent",
-  NeoPlayerLoggedOutEvent: "PlayerQuitEvent",
-  MinecraftPlayerQuitEvent: "PlayerQuitEvent",
-  BaseQuitEvent: "PlayerQuitEvent",
+  PlayerQuitEvent: 'PlayerQuitEvent',
+  ServerPlayConnectionDisconnectEvent: 'PlayerQuitEvent',
+  PlayerLoggedOutEvent: 'PlayerQuitEvent',
+  NeoPlayerLoggedOutEvent: 'PlayerQuitEvent',
+  MinecraftPlayerQuitEvent: 'PlayerQuitEvent',
+  BaseQuitEvent: 'PlayerQuitEvent',
 
-  VelocityDisconnectEvent: "PlayerQuitEvent",
-  VelocityCommandExecuteEvent: "PlayerCommandPreprocessEvent",
-  VelocityLoginEvent: "PlayerJoinEvent",
-  VelocityPlayerChatEvent: "AsyncPlayerChatEvent",
+  VelocityDisconnectEvent: 'PlayerQuitEvent',
+  VelocityCommandExecuteEvent: 'PlayerCommandPreprocessEvent',
+  VelocityLoginEvent: 'PlayerJoinEvent',
+  VelocityPlayerChatEvent: 'AsyncPlayerChatEvent',
 };
 
 // 监听映射
 export function getListeningEvent(input: string | string[]): string {
-  if (typeof input === "string") {
+  if (typeof input === 'string') {
     input = [input];
   }
 

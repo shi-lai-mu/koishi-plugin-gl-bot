@@ -1,38 +1,43 @@
-import { Context, Logger, Schema } from "koishi";
+import { Context, Logger, Schema } from 'koishi';
 
-import { Config } from "./type";
-import { IS_DEV } from "../constants";
-import MinecraftSyncMsg from "../queQiao";
+import { IS_DEV } from '../constants';
+import MinecraftSyncMsg from '../queQiao';
+import { Config } from './type';
 
-const logger = new Logger("gl-bot");
+const logger = new Logger('gl-bot');
 
 export class GLBot {
-  
-  static Config: Schema<Config> = Schema.intersect([
-    MinecraftSyncMsg.Config,
-  ]);
+  static Config: Schema<Config> = Schema.intersect([MinecraftSyncMsg.Config]);
 
-  constructor(private ctx: Context, private config: Config) {
-    console.log(config);
+  private mcSyncMsg: MinecraftSyncMsg;
+
+  constructor(
+    private ctx: Context,
+    private config: Config,
+  ) {
+    this.mcSyncMsg = new MinecraftSyncMsg(this.ctx, this.config);
     this.initialize();
   }
 
   private initialize() {
-    new MinecraftSyncMsg(this.ctx, this.config);
     this.globalCommand();
   }
 
   private globalCommand() {
-    this.ctx.on("message", (session) => {
+    this.ctx.on('message', session => {
       if (IS_DEV) {
         // console.log(JSON.stringify(session, null, 2));
       }
       switch (session.content) {
         case '环境变量':
-          session.send(`当前环境变量：${Object.entries(process.env).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
+          session.send(
+            `当前环境变量：${Object.entries(process.env)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join('\n')}`,
+          );
           break;
 
-          default:
+        default:
           break;
       }
 

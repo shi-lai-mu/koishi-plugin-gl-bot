@@ -4,11 +4,7 @@
     "module": "esnext",
     "moduleResolution": "node",
     "jsx": "preserve",
-    "types": [
-      "@koishijs/client/global"
-    ]
+    "types": ["@koishijs/client/global"]
   },
-  "include": [
-    "."
-  ]
+  "include": ["."]
 }
