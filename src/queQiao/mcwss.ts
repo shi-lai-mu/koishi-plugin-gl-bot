@@ -93,10 +93,12 @@ class McWss {
       ws.on('message', async buffer => {
         this.ctx.logger.info(`收到来自客户端的消息: ${buffer.toString()}`);
         const data = JSON.parse(buffer.toString());
-        let eventName = data.event_name
+        const eventName = data.event_name
           ? getListeningEvent(data.event_name)
           : '';
-        if (!getSubscribedEvents(this.conf.event).includes(eventName)) return;
+        if (!getSubscribedEvents(this.conf.event).includes(eventName)) {
+          return;
+        }
 
         // let sendMsg = getSubscribedEvents(this.conf.event).includes(eventName)? `[${data.server_name}](${eventTrans[eventName].name}) ${eventTrans[eventName].action? data.player?.nickname+' ':''}${(eventTrans[eventName].action? eventTrans[eventName].action+' ':'')}${data.message? data.message:''}`:''
         // let sendMsg:any = h.unescape(sendMsg).replaceAll('&amp;','&').replaceAll(/<\/?template>/gi,'').replaceAll(/§./g,'')
@@ -120,36 +122,41 @@ class McWss {
           [data.player?.nickname, sendMsg],
         );
 
-        if (data.server_name)
+        if (data.server_name) {
           this.ctx.bots.forEach(async (bot: Bot) => {
             const channels = this.conf.sendToChannel
               .filter(str => str.includes(`${bot.platform}`))
               .map(str => str.replace(`${bot.platform}:`, ''));
-            sendMsg ? bot.broadcast(channels, sendMsg, 0) : '';
+            if (sendMsg) {
+              bot.broadcast(channels, sendMsg, 0);
+            }
           });
+        }
       });
 
       ws.on('error', err => {
-        if (!this.conf.hideConnect)
+        if (!this.conf.hideConnect) {
           this.ctx.bots.forEach(async (bot: Bot) => {
             const channels = this.conf.sendToChannel
               .filter(str => str.includes(`${bot.platform}`))
               .map(str => str.replace(`${bot.platform}:`, ''));
             bot.broadcast(channels, '与Websocket客户端断通信时发生错误!', 0);
           });
+        }
         this.ctx.logger.error('与Websocket客户端断通信时发生错误!' + err);
       });
 
       // 当客户端断开连接时触发
       ws.on('close', () => {
         this.connectedClients.delete(ws);
-        if (!this.conf.hideConnect)
+        if (!this.conf.hideConnect) {
           this.ctx.bots.forEach(async (bot: Bot) => {
             const channels = this.conf.sendToChannel
               .filter(str => str.includes(`${bot.platform}`))
               .map(str => str.replace(`${bot.platform}:`, ''));
             bot.broadcast(channels, '与Websocket客户端断开连接!', 0);
           });
+        }
         this.ctx.logger.error('非正常与Websocket客户端断开连接!');
       });
     });
@@ -177,7 +184,7 @@ class McWss {
           session.content.startsWith(this.conf.sendprefix) &&
           session.content !== this.conf.sendprefix
         ) {
-          let msg: string = session.content
+          const msg: string = session.content
             .replaceAll('&amp;', '&')
             .replaceAll(/<\/?template>/gi, '')
             .replace(this.conf.sendprefix, '')
@@ -194,7 +201,7 @@ class McWss {
               }]`,
             );
           if (this.connectedClients.size > 0) {
-            let msgData = {
+            const msgData: WsMessageData = {
               api: 'broadcast',
               data: {
                 message: [
@@ -299,7 +306,7 @@ namespace McWss {
     locale: string | any;
   }
 
-  export const Config: Schema<Config> = Schema.intersect([
+  export const Config = Schema.intersect([
     WsConf,
     Schema.object({
       sendToChannel: Schema.array(String).description(

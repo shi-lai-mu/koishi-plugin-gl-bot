@@ -3,6 +3,7 @@ import { isString } from 'lodash-es';
 import { Rcon } from 'rcon-client';
 import { RawData, WebSocket } from 'ws';
 import { IS_DEV } from '../constants';
+import { GLBotConfigType } from '../gl';
 import { clearSessionContentToMcMessage } from '../utils';
 import McWss from './mcwss';
 import { RconConf, WsConf, getListeningEvent } from './values';
@@ -44,7 +45,7 @@ class MinecraftSyncMsg {
 
   constructor(
     private ctx: Context,
-    private config: MinecraftSyncMsg.Config,
+    private config: GLBotConfigType,
   ) {
     this.initialize();
   }
@@ -511,16 +512,16 @@ class MinecraftSyncMsg {
 }
 
 namespace MinecraftSyncMsg {
-  export interface Config extends WsConf, RconConf {
-    sendToChannel: string[];
-    sendprefix: string;
-    cmdprefix: string;
-    hideConnect: boolean;
-    locale: string;
-    watchChannel: string[];
-  }
+  // export interface Config extends WsConf, RconConf {
+  //   sendToChannel: string[];
+  //   sendprefix: string;
+  //   cmdprefix: string;
+  //   hideConnect: boolean;
+  //   locale: string;
+  //   watchChannel: string[];
+  // }
 
-  export const Config: Schema<Config> = Schema.intersect([
+  export const Config = Schema.intersect([
     WsConf,
     RconConf,
     Schema.object({

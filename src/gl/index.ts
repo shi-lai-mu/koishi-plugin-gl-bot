@@ -1,21 +1,23 @@
 import { Context, Logger, Schema } from 'koishi';
 
 import { IS_DEV } from '../constants';
+import { MCManager } from '../mcsManager';
 import MinecraftSyncMsg from '../queQiao';
-import { Config } from './type';
 
 const logger = new Logger('gl-bot');
 
 export class GLBot {
-  static Config: Schema<Config> = Schema.intersect([MinecraftSyncMsg.Config]);
+  static Config = Schema.intersect([MinecraftSyncMsg.Config, MCManager.Config]);
 
   private mcSyncMsg: MinecraftSyncMsg;
+  private mcsManager: MCManager;
 
   constructor(
     private ctx: Context,
-    private config: Config,
+    private config: GLBotConfigType,
   ) {
-    this.mcSyncMsg = new MinecraftSyncMsg(this.ctx, this.config);
+    this.mcSyncMsg = new MinecraftSyncMsg(ctx, config);
+    this.mcsManager = new MCManager(ctx, config);
     this.initialize();
   }
 
@@ -47,3 +49,12 @@ export class GLBot {
     });
   }
 }
+
+export class GLBotBase {
+  constructor(
+    private ctx: Context,
+    private config: GLBotConfigType,
+  ) {}
+}
+
+export type GLBotConfigType = Schemastery.TypeS<typeof GLBot.Config>;
