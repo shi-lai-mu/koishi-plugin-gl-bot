@@ -14,5 +14,8 @@ export class MCManagerConfig {
     mcManagerWs: Schema.string()
       .default('ws://localhost:24444')
       .description('WebSocket 地址'),
+    mcManagerMaxConnectWs: Schema.number()
+      .default(20)
+      .description('最大连接实例数'),
   }).description('MCSMANAGER 基础配置');
 }

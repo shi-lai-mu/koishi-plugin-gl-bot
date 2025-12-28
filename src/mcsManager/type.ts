@@ -1,10 +1,13 @@
-interface MCManagerPanelResponse<T> {
+import { RemoteInstanceStatusEnum } from './constants';
+import { MCSManagerInstance } from './instance';
+
+export interface MCManagerPanelResponse<T> {
   status: number;
   data: T;
   time: number;
 }
 
-interface UserInfo {
+export interface UserInfo {
   uuid: string;
   userName: string;
   loginTime: string;
@@ -13,7 +16,108 @@ interface UserInfo {
   permission: number;
   apiKey: string;
   isInit: boolean;
-  open2FA: boolean;
+  opennumberFA: boolean;
   secret: string;
   token: string;
+}
+
+export interface ServiceRemoteItem {
+  uuid: string;
+  ip: string;
+  port: number;
+  prefix: string;
+  available: boolean;
+  remarks: string;
+}
+
+export interface ServiceRemoteItemCustom extends ServiceRemoteItem {
+  instances: MCSManagerInstance[];
+  auth?: ServiceInstanceConnectAuth;
+}
+
+export interface ServiceRemoteInstanceItem {
+  instanceUuid: string;
+  started: number;
+  status: RemoteInstanceStatusEnum;
+  config: ServiceRemoteInstanceItemConfig;
+  info: ServiceRemoteInstanceInfo;
+}
+
+export interface ServiceRemoteInstanceItemConfig {
+  nickname: string;
+  startCommand: string;
+  stopCommand: string;
+  cwd: string;
+  ie: string;
+  oe: string;
+  createDatetime: number;
+  lastDatetime: number;
+  type: string;
+  tag: [];
+  endTime: number;
+  fileCode: string;
+  processType: string;
+  updateCommand: string;
+  crlf: number;
+  category: number;
+  enableRcon: false;
+  rconPassword: string;
+  rconPort: number;
+  rconIp: string;
+  actionCommandList: [];
+  terminalOption: {
+    haveColor: false;
+    pty: true;
+    ptyWindowCol: number;
+    ptyWindowRow: number;
+  };
+  eventTask: {
+    autoStart: false;
+    autoRestart: false;
+    ignore: false;
+  };
+  docker: {
+    containerName: string;
+    image: string;
+    ports: [];
+    extraVolumes: [];
+    memory: number;
+    networkMode: string;
+    networkAliases: [];
+    cpusetCpus: string;
+    cpuUsage: number;
+    maxSpace: number;
+    io: number;
+    network: number;
+    workingDir: string;
+    env: [];
+    changeWorkdir: false;
+  };
+  pingConfig: {
+    ip: string;
+    port: number;
+    type: number;
+  };
+  extraServiceConfig: {
+    openFrpTunnelId: string;
+    openFrpToken: string;
+    isOpenFrp: false;
+  };
+}
+
+export interface ServiceRemoteInstanceInfo {
+  mcPingOnline: true;
+  currentPlayers: number;
+  maxPlayers: number;
+  version: string;
+  fileLock: number;
+  playersChart: [];
+  openFrpStatus: false;
+  latency: number;
+}
+
+export interface ServiceInstanceConnectAuth {
+  password: string;
+  addr: string;
+  prefix: string;
 }

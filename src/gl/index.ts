@@ -44,7 +44,7 @@ export class GLBot {
       }
 
       if (~session.content.indexOf('群群')) {
-        session.send(`群群是笨蛋！大笨蛋喵`);
+        session.send(`群群似杂鱼！大杂鱼喵`);
       }
     });
   }

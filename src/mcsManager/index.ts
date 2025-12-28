@@ -1,27 +1,27 @@
 import { Context, Schema } from 'koishi';
 import { GLBotConfigType } from '../gl';
+import { MCSManagerBot } from './bot';
 import { MCManagerConfig } from './config';
 import { MCSManagerPanel } from './panel';
-import { MCSManagerWebSocketIO } from './ws';
 
 export class MCManager {
   static Config = Schema.intersect([MCManagerConfig.Base]);
 
-  private ws: MCSManagerWebSocketIO;
   private panel: MCSManagerPanel;
 
+  private bot: MCSManagerBot;
+
   constructor(
-    private ctx: Context,
-    private config: GLBotConfigType,
+    private readonly ctx: Context,
+    private readonly config: GLBotConfigType,
   ) {
     this.panel = new MCSManagerPanel(ctx, config);
-    this.ws = new MCSManagerWebSocketIO(ctx, config);
+    this.bot = new MCSManagerBot(ctx, config, this.panel);
     ctx.on('ready', this.initialize.bind(this));
   }
 
   async initialize() {
     await this.panel.initialize();
-    this.ws.initialize();
   }
 }
 
