@@ -1,5 +1,5 @@
 import { Bot, Context, Logger, Schema, h } from 'koishi';
-import { isString } from 'lodash-es';
+import { isString } from 'lodash';
 import { Rcon } from 'rcon-client';
 import { RawData, WebSocket } from 'ws';
 import { IS_DEV } from '../constants';

@@ -1,5 +1,5 @@
 import { Context, Schema } from 'koishi';
-import { GLBotConfigType } from '../gl';
+import { GLBot, GLBotConfigType } from '../gl';
 import { MCSManagerBot } from './bot';
 import { MCManagerConfig } from './config';
 import { MCSManagerPanel } from './panel';
@@ -12,11 +12,12 @@ export class MCManager {
   private bot: MCSManagerBot;
 
   constructor(
+    public readonly gl: GLBot,
     private readonly ctx: Context,
     private readonly config: GLBotConfigType,
   ) {
     this.panel = new MCSManagerPanel(ctx, config);
-    this.bot = new MCSManagerBot(ctx, config, this.panel);
+    this.bot = new MCSManagerBot(this, ctx, config, this.panel);
     ctx.on('ready', this.initialize.bind(this));
   }
 

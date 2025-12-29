@@ -121,3 +121,31 @@ export interface ServiceInstanceConnectAuth {
   addr: string;
   prefix: string;
 }
+
+export interface CreateInstanceData {
+  nickname?: string;
+  startCommand?: string;
+  stopCommand?: string;
+  cwd?: string;
+  ie?: string;
+  oe?: string;
+  processType?: string;
+  createDatetime?: string;
+  lastDatetime?: string;
+  type?: string;
+  tag?: string[];
+  maxSpace?: null;
+  endTime?: string;
+  docker?: {
+    containerName?: string;
+    image?: string;
+    ports?: string[];
+    extraVolumes?: string[];
+    networkMode?: 'bridge';
+    networkAliases?: string[];
+    cpusetCpus?: string;
+    workingDir?: '/data';
+    changeWorkdir?: false;
+    env?: [];
+  };
+}

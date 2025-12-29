@@ -1,5 +1,6 @@
 import { HTTP } from 'koishi';
 import {
+  CreateInstanceData,
   MCManagerPanelResponse,
   ServiceInstanceConnectAuth,
   ServiceRemoteInstanceItem,
@@ -190,6 +191,78 @@ export class MCSManagerAPI {
         })
       ).data.data?.instanceUuid === instanceId
     );
+  }
+
+  async createInstance(daemonId: string, data: CreateInstanceData) {
+    const mergeConfig = Object.assign({}, data, {
+      nickname: '',
+      startCommand: '',
+      stopCommand: 'stop',
+      cwd: '.',
+      ie: 'utf-8',
+      oe: 'utf-8',
+      processType: 'general',
+      lastDatetime: '',
+      type: 'minecraft/java',
+      tag: [],
+      maxSpace: null,
+      endTime: '',
+      docker: {
+        containerName: '',
+        image: '',
+        ports: [],
+        extraVolumes: [],
+        networkMode: 'bridge',
+        networkAliases: [],
+        cpusetCpus: '',
+        workingDir: '/data',
+        changeWorkdir: false,
+        env: [],
+      },
+    });
+
+    const result = await this.http<
+      MCManagerPanelResponse<ServiceRemoteInstanceItem>
+    >(`${this.baseUrl}/instance`, {
+      method: 'POST',
+      headers: this.requestHeaders,
+      params: {
+        daemonId,
+        token: this.userInfo.token,
+      },
+      data: mergeConfig,
+    });
+
+    if (result.status === 200) {
+      return true;
+    }
+
+    return;
+  }
+
+  async uploadFileToRemoteInstance(
+    daemonId: string,
+    filePath: string,
+  ): Promise<boolean> {
+    const formData = new FormData();
+    formData.append('file', filePath);
+
+    const result = await this.http<MCManagerPanelResponse<null>>(
+      `${this.baseUrl}/protected_instance/upload_file`,
+      {
+        method: 'POST',
+        headers: {
+          ...this.requestHeaders,
+        },
+        params: {
+          daemonId,
+          token: this.userInfo.token,
+        },
+        data: formData,
+      },
+    );
+
+    return result.status === 200;
   }
 }
 

@@ -1,5 +1,5 @@
 import { Context, isEmpty, Logger } from 'koishi';
-import { isEqual } from 'lodash-es';
+import { isEqual } from 'lodash';
 
 import { GLBotConfigType } from '../gl';
 import { MCSManagerAPI } from './api';

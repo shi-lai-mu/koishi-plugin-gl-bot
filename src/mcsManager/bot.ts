@@ -1,14 +1,18 @@
 import { Context } from 'koishi';
+import { MCManager } from '.';
 import { GLBotConfigType } from '../gl';
 import {
   MCBotListCommand,
   MCBotRestartCommand,
   MCBotStartCommand,
+  MCBotStopCommand,
 } from './commands';
+import { MCBotCreateCommand } from './commands/create';
 import { MCSManagerPanel } from './panel';
 
 export class MCSManagerBot {
   constructor(
+    public readonly manager: MCManager,
     public readonly ctx: Context,
     public readonly config: GLBotConfigType,
     public readonly panel: MCSManagerPanel,
@@ -28,7 +32,13 @@ export class MCSManagerBot {
   }
 
   public commands() {
-    return [MCBotRestartCommand, MCBotListCommand, MCBotStartCommand];
+    return [
+      MCBotRestartCommand,
+      MCBotListCommand,
+      MCBotStartCommand,
+      MCBotStopCommand,
+      MCBotCreateCommand,
+    ];
   }
 
   async initialize() {
@@ -39,14 +49,7 @@ export class MCSManagerBot {
 
   private registerCommands() {
     for (const Command of this.commands()) {
-      new Command(this);
+      const _ = new Command(this);
     }
-
-    // this.ctx
-    //   .command('/服务器 <action> [...name]')
-    //   .option('debug', '-d')
-    //   .action(({ options }, action, ...name) => {
-    //     return `收到指令：${action} ${name.join(' ')}，调试模式：${options.debug}`;
-    //   });
   }
 }

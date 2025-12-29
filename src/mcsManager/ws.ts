@@ -1,7 +1,7 @@
 import * as io from 'socket.io-client';
 
 import { Context, Logger } from 'koishi';
-import { isEqual } from 'lodash-es';
+import { isEqual } from 'lodash';
 import { GLBotConfigType } from '../gl';
 import { MCSManagerAPI } from './api';
 import {
@@ -44,7 +44,7 @@ export class MCSManagerWebSocketIO {
 
     this.bindEvents();
 
-    logger.info(
+    logger.debug(
       `正在连接到 MCSManager 实例服务器 [${this.remote.remarks}] - ${this.instance.config.nickname} ...`,
     );
   }

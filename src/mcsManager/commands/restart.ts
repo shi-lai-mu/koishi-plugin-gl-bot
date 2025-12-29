@@ -1,12 +1,12 @@
-import { Context, Session } from 'koishi';
+import { Argv } from 'koishi';
+import { isString } from 'lodash';
 
 import { MCSManagerBot } from '../bot';
 import {
   RemoteInstanceStatusEnum,
   RemoteInstanceStatusName,
 } from '../constants';
-
-// const logger = new Logger('mcsmanager-reset');
+import { MCBotCommandBase } from './base';
 
 const tempSelections = new Map<number, string>();
 
@@ -15,19 +15,16 @@ const tempSelections = new Map<number, string>();
  *
  * @example 服务器 重启 神话
  */
-export class MCBotRestartCommand {
-  constructor(private readonly bot: MCSManagerBot) {
-    bot.ctx
-      .command('服务器.重启 <name...>')
-      .action(async ({ session }, ...name) => {
-        return await this.handle(session, name.join(' '));
-      });
+export class MCBotRestartCommand extends MCBotCommandBase {
+  command: string = '服务器.重启 <name...>';
+
+  constructor(public readonly bot: MCSManagerBot) {
+    super(bot);
+    this.initialize();
   }
 
-  async handle(
-    session: Session<never, never, Context>,
-    name: string,
-  ): Promise<string> {
+  async handle({ session }: Argv, args: string[]) {
+    let name = isString(args) ? args : args.join(' ');
     let selectIndex = -1;
     const userId = Number(session.event.user.id);
 

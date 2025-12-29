@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-gl-bot",
   "description": "GleamSlime Koishi Rebot Plugins",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "contributors": [
@@ -28,7 +28,7 @@
   ],
   "devDependencies": {
     "@koishijs/client": "^5.30.11",
-    "@types/lodash-es": "^4",
+    "@types/lodash": "^4.17.21",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
@@ -41,7 +41,8 @@
     }
   },
   "dependencies": {
-    "lodash-es": "^4.17.22",
+    "@types/ms": "^2.1.0",
+    "lodash": "^4.17.21",
     "rcon-client": "^4.2.5",
     "socket.io-client": "^4.8.2",
     "ws": "^8.18.3"

@@ -2,22 +2,29 @@ import { Context, Logger, Schema } from 'koishi';
 
 import { IS_DEV } from '../constants';
 import { MCManager } from '../mcsManager';
+import { NapCat } from '../napCat';
 import MinecraftSyncMsg from '../queQiao';
 
 const logger = new Logger('gl-bot');
 
 export class GLBot {
-  static Config = Schema.intersect([MinecraftSyncMsg.Config, MCManager.Config]);
+  static Config = Schema.intersect([
+    MinecraftSyncMsg.Config,
+    MCManager.Config,
+    NapCat.Config,
+  ]);
 
   private mcSyncMsg: MinecraftSyncMsg;
   private mcsManager: MCManager;
+  public napCat: NapCat;
 
   constructor(
     private ctx: Context,
     private config: GLBotConfigType,
   ) {
     this.mcSyncMsg = new MinecraftSyncMsg(ctx, config);
-    this.mcsManager = new MCManager(ctx, config);
+    this.mcsManager = new MCManager(this, ctx, config);
+    this.napCat = new NapCat(ctx, config);
     this.initialize();
   }
 

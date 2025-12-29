@@ -11,12 +11,12 @@ import { MCBotCommandBase } from './base';
 const tempSelections = new Map<number, string>();
 
 /**
- * 服务器启动指令
+ * 服务器关闭指令
  *
- * @example 服务器 启动 神话
+ * @example 服务器 关闭 神话
  */
-export class MCBotStartCommand extends MCBotCommandBase {
-  command: string = '服务器.启动 <name...>';
+export class MCBotStopCommand extends MCBotCommandBase {
+  command: string = '服务器.关闭 <name...>';
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
@@ -49,7 +49,7 @@ export class MCBotStartCommand extends MCBotCommandBase {
           (item, index) =>
             `${index + 1}. [${RemoteInstanceStatusName[item.instance.cfg.status]}] ${item.instance.cfg.config.nickname}`,
         )
-        .join('\n')}\n ==== 例如发送： (服务器 启动 1) ====`;
+        .join('\n')}\n ==== 例如发送： (服务器 关闭 1) ====`;
     }
 
     const targetInstance =
@@ -61,12 +61,12 @@ export class MCBotStartCommand extends MCBotCommandBase {
 
     const { cfg } = targetInstance.instance;
 
-    if (isEqual(cfg.status, RemoteInstanceStatusEnum.STOPPED)) {
-      await targetInstance.instance.startInstance();
+    if (isEqual(cfg.status, RemoteInstanceStatusEnum.RUNNING)) {
+      await targetInstance.instance.stopInstance();
       this.bot.panel.handleRemoteServices();
-      return `已向服务器实例 "${cfg.config.nickname}" 发送启动操作`;
+      return `已向服务器实例 "${cfg.config.nickname}" 发送关闭操作`;
     }
 
-    return `服务器实例 "${cfg.config.nickname}" 当前状态为 ${cfg.status}，无法执行启动操作`;
+    return `服务器实例 "${cfg.config.nickname}" 当前状态为 ${cfg.status}，无法执行关闭操作`;
   }
 }
