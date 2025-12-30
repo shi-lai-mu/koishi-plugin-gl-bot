@@ -176,7 +176,6 @@ class MinecraftSyncMsg {
     // }${
     //   data.message ? data.message : ''
     // }`
-
     let sendMsg: any = h
       .unescape(data.message ? data.message : '')
       .replaceAll('&amp;', '&')

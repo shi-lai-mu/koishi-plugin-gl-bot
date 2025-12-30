@@ -1,24 +1,24 @@
 import { Argv } from 'koishi';
-import { isEqual, isString } from 'lodash';
+import { isString } from 'lodash';
 
-import { MCSManagerBot } from '../bot';
+import { MCSManagerBot } from '../../bot';
 import {
   RemoteInstanceStatusEnum,
   RemoteInstanceStatusName,
-} from '../constants';
-import { MCBotCommandBase, MCBotCommandRole } from './base';
+} from '../../constants';
+import { BotCommandBase, BotCommandRole } from '../base';
 
 const tempSelections = new Map<number, string>();
 
 /**
- * 服务器启动指令
+ * 服务器重启指令
  *
- * @example 服务器 启动 神话
+ * @example 服务器 重启 神话
  */
-export class MCBotStartCommand extends MCBotCommandBase {
-  command: string[] = ['服务器.启动 <name...>', 'MC.启动 <name...>'];
+export class ARKBotRestartCommand extends BotCommandBase {
+  command: string[] = ['方舟.重启 <name...>', 'ARK.重启 <name...>'];
 
-  roles = [MCBotCommandRole.Admin, MCBotCommandRole.Owner];
+  roles = [BotCommandRole.All];
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
@@ -51,7 +51,7 @@ export class MCBotStartCommand extends MCBotCommandBase {
           (item, index) =>
             `${index + 1}. [${RemoteInstanceStatusName[item.instance.cfg.status]}] ${item.instance.cfg.config.nickname}`,
         )
-        .join('\n')}\n ==== 例如发送： (服务器 启动 1) ====`;
+        .join('\n')}\n ==== 例如发送： (服务器 重启 1) ====`;
     }
 
     const targetInstance =
@@ -63,12 +63,21 @@ export class MCBotStartCommand extends MCBotCommandBase {
 
     const { cfg } = targetInstance.instance;
 
-    if (isEqual(cfg.status, RemoteInstanceStatusEnum.STOPPED)) {
-      await targetInstance.instance.startInstance();
-      this.bot.panel.handleRemoteServices();
-      return `已向服务器实例 "${cfg.config.nickname}" 发送启动操作`;
-    }
+    switch (cfg.status) {
+      // 关闭状态：启动
+      case RemoteInstanceStatusEnum.RUNNING:
+        await targetInstance.instance.restartInstance();
+        this.bot.panel.handleRemoteServices();
+        return `已向服务器实例 "${cfg.config.nickname}" 发送重启操作`;
 
-    return `服务器实例 "${cfg.config.nickname}" 当前状态为 ${cfg.status}，无法执行启动操作`;
+      // 启动状态：重启
+      case RemoteInstanceStatusEnum.STOPPED:
+        await targetInstance.instance.startInstance();
+        this.bot.panel.handleRemoteServices();
+        return `已向服务器实例 "${cfg.config.nickname}" 发送启动操作`;
+
+      default:
+        return `服务器实例 "${cfg.config.nickname}" 当前状态为 ${cfg.status}，无法执行重启操作`;
+    }
   }
 }

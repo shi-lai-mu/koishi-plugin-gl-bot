@@ -1,0 +1,49 @@
+{
+  "nickname": "",
+  "startCommand": "",
+  "stopCommand": "stop",
+  "cwd": ".",
+  "ie": "UTF-8",
+  "oe": "UTF-8",
+  "createDatetime": 0,
+  "lastDatetime": 0,
+  "type": "minecraft/java",
+  "tag": [],
+  "endTime": 0,
+  "fileCode": "UTF-8",
+  "processType": "general",
+  "updateCommand": "",
+  "runAs": "",
+  "actionCommandList": [],
+  "crlf": 1,
+  "category": 0,
+  "enableRcon": false,
+  "rconPassword": "",
+  "rconIp": "",
+  "terminalOption": {
+    "haveColor": true,
+    "pty": false,
+    "ptyWindowCol": 164,
+    "ptyWindowRow": 40
+  },
+  "eventTask": {
+    "autoStart": false,
+    "autoRestart": false,
+    "autoRestartMaxTimes": 3,
+    "ignore": false
+  },
+  "docker": {
+    "containerName": "",
+    "image": "",
+    "ports": [],
+    "extraVolumes": [],
+    "networkMode": "bridge",
+    "networkAliases": [],
+    "cpusetCpus": "",
+    "workingDir": "/data",
+    "env": [],
+    "changeWorkdir": true
+  },
+  "pingConfig": { "ip": "", "type": 1 },
+  "extraServiceConfig": { "openFrpTunnelId": "", "openFrpToken": "" }
+}

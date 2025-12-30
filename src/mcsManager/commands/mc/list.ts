@@ -1,14 +1,14 @@
-import { formatDuration } from '../../utils';
-import { MCSManagerBot } from '../bot';
-import { RemoteInstanceStatusName } from '../constants';
-import { MCBotCommandBase } from './base';
+import { formatDuration } from '../../../utils';
+import { MCSManagerBot } from '../../bot';
+import { RemoteInstanceStatusName } from '../../constants';
+import { BotCommandBase } from '../base';
 
 /**
  * 服务器列表指令
  *
  * @example 服务器 列表
  */
-export class MCBotListCommand extends MCBotCommandBase {
+export class MCBotListCommand extends BotCommandBase {
   command: string[] = ['服务器.列表 <status>', 'MC.列表 <status>'];
 
   roles = [];
@@ -27,6 +27,7 @@ export class MCBotListCommand extends MCBotCommandBase {
     ).filter(
       item =>
         !filteredStatus ||
+        ~item.instance.cfg.config.nickname.indexOf(filteredStatus) ||
         RemoteInstanceStatusName[item.instance.cfg.status] === filteredStatus,
     );
 

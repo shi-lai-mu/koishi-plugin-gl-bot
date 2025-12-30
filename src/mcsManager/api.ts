@@ -1,5 +1,7 @@
+import { readFileSync } from 'fs';
 import { HTTP } from 'koishi';
 import {
+  CreateInstanceConfig,
   CreateInstanceData,
   MCManagerPanelResponse,
   ServiceInstanceConnectAuth,
@@ -7,6 +9,9 @@ import {
   ServiceRemoteItem,
   UserInfo,
 } from './type';
+
+import { IS_DEV } from '../constants';
+import createInstanceUpload from './json/createInstanceUpload.json';
 
 export class MCSManagerAPI {
   userInfo: UserInfo;
@@ -21,6 +26,7 @@ export class MCSManagerAPI {
   constructor(
     private http: HTTP,
     private baseUrl: string,
+    private wsUrl: string,
     private authCookie?: string,
   ) {}
 
@@ -193,6 +199,7 @@ export class MCSManagerAPI {
     );
   }
 
+  // 创建实例
   async createInstance(daemonId: string, data: CreateInstanceData) {
     const mergeConfig = Object.assign({}, data, {
       nickname: '',
@@ -240,12 +247,122 @@ export class MCSManagerAPI {
     return;
   }
 
+  async instanceUploadByZip(
+    daemonId: string,
+    config: Partial<CreateInstanceConfig>,
+    file: {
+      filename: string;
+      size: number;
+      path: string;
+    },
+    onProcessHandle?: (value: string) => void,
+  ) {
+    const mergeConfig = Object.assign({}, createInstanceUpload, config);
+    const uploadDir = '.';
+
+    const { status, data } = await this.http<
+      MCManagerPanelResponse<{
+        addr: string;
+        instanceUuid: string;
+        password: string;
+        remoteMappings: string[];
+      }>
+    >(`${this.baseUrl}/instance/upload`, {
+      method: 'POST',
+      headers: this.requestHeaders,
+      params: {
+        upload_dir: uploadDir,
+        daemonId,
+        token: this.userInfo.token,
+      },
+      data: mergeConfig,
+    });
+
+    if (status !== 200 && !data.data.instanceUuid) {
+      throw new Error('创建实例上传任务失败');
+    }
+
+    const newFile = await this.http<MCManagerPanelResponse<{ id: string }>>(
+      `${this.wsUrl}/upload-new/${data.data.password}`,
+      {
+        headers: this.requestHeaders,
+        method: 'POST',
+        params: {
+          filename: file.filename,
+          size: file.size,
+          sum: '',
+          overwrite: false,
+          unzip: true,
+          code: 'gbk',
+          token: this.userInfo.token,
+        },
+      },
+    );
+
+    if (newFile.status !== 200 || !newFile.data.data.id) {
+      throw new Error('上传文件失败');
+    }
+
+    // 分片上传文件
+    const fileBuffer = readFileSync(file.path);
+    const chunkSize = 2 * 1024 * 1024; // 2MB 每个分片
+    const totalSize = fileBuffer.length;
+    let offset = 0;
+
+    // console.log(
+    //   `开始分片上传，文件大小: ${totalSize} bytes，分片大小: ${chunkSize} bytes`,
+    // );
+
+    onProcessHandle?.(`正在解压文件...`);
+    while (offset < totalSize) {
+      const end = Math.min(offset + chunkSize, totalSize);
+      const chunk = fileBuffer.slice(offset, end);
+      const chunkBlob = new Blob([chunk], {
+        type: 'application/octet-stream',
+      });
+
+      const formData = new FormData();
+      formData.append('file', chunkBlob, file.filename);
+      // const progress = ((end / totalSize) * 100).toFixed(0);
+
+      if (IS_DEV) {
+        console.log(
+          `上传分片: offset=${offset}, size=${chunk.length}, progress=${((end / totalSize) * 100).toFixed(1)}%`,
+        );
+      }
+      const response = await this.http(
+        `${this.wsUrl}/upload-piece/${newFile.data.data.id}`,
+        {
+          method: 'POST',
+          params: {
+            offset,
+            token: this.userInfo.token,
+          },
+          data: formData,
+        },
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`分片上传失败，offset: ${offset}`);
+      }
+
+      offset = end;
+    }
+
+    return data.data;
+  }
+
+  // 上传文件至实例
   async uploadFileToRemoteInstance(
     daemonId: string,
     filePath: string,
   ): Promise<boolean> {
+    const fileBuffer = readFileSync(filePath);
+    const fileBlob = new Blob([fileBuffer], {
+      type: 'application/octet-stream',
+    });
     const formData = new FormData();
-    formData.append('file', filePath);
+    formData.append('file', fileBlob);
 
     const result = await this.http<MCManagerPanelResponse<null>>(
       `${this.baseUrl}/protected_instance/upload_file`,

@@ -149,3 +149,70 @@ export interface CreateInstanceData {
     env?: [];
   };
 }
+
+export type TerminalOption = {
+  haveColor: boolean;
+  pty: boolean;
+  ptyWindowCol: number;
+  ptyWindowRow: number;
+};
+
+export type EventTaskConfig = {
+  autoStart: boolean;
+  autoRestart: boolean;
+  autoRestartMaxTimes: number;
+  ignore: boolean;
+};
+
+export type DockerConfig = {
+  containerName: string;
+  image: string;
+  ports: unknown[];
+  extraVolumes: unknown[];
+  networkMode: string;
+  networkAliases: string[];
+  cpusetCpus: string;
+  workingDir: string;
+  env: unknown[];
+  changeWorkdir: boolean;
+};
+
+export type PingConfig = {
+  ip: string;
+  type: number;
+};
+
+export type ExtraServiceConfig = {
+  openFrpTunnelId: string;
+  openFrpToken: string;
+};
+
+export type CreateInstanceConfig = {
+  nickname: string;
+  startCommand: string;
+  stopCommand: string;
+  cwd: string;
+  ie: string;
+  oe: string;
+  createDatetime: number;
+  lastDatetime: number;
+  type: string;
+  tag: string[];
+  endTime: number;
+  fileCode: string;
+  processType: string;
+  updateCommand: string;
+  runAs: string;
+  actionCommandList: unknown[];
+  crlf: number;
+  category: number;
+  enableRcon: boolean;
+  rconPassword: string;
+  rconIp: string;
+
+  terminalOption: TerminalOption;
+  eventTask: EventTaskConfig;
+  docker: DockerConfig;
+  pingConfig: PingConfig;
+  extraServiceConfig: ExtraServiceConfig;
+};

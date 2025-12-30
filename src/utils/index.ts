@@ -1,6 +1,4 @@
-export * from './file.download';
 export * from './game.mc';
-export * from './napcat.file';
 
 /**
  * 格式化时间差为易读格式

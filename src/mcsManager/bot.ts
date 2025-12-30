@@ -2,12 +2,16 @@ import { Context } from 'koishi';
 import { MCManager } from '.';
 import { GLBotConfigType } from '../gl';
 import {
+  ARKBotListCommand,
+  ARKBotRestartCommand,
+  ARKBotStartCommand,
+  ARKBotStopCommand,
   MCBotListCommand,
   MCBotRestartCommand,
   MCBotStartCommand,
   MCBotStopCommand,
 } from './commands';
-import { MCBotCreateCommand } from './commands/create';
+import { MCBotCreateCommand } from './commands/mc/create';
 import { MCSManagerPanel } from './panel';
 
 export class MCSManagerBot {
@@ -38,6 +42,11 @@ export class MCSManagerBot {
       MCBotStartCommand,
       MCBotStopCommand,
       MCBotCreateCommand,
+
+      ARKBotListCommand,
+      ARKBotRestartCommand,
+      ARKBotStartCommand,
+      ARKBotStopCommand,
     ];
   }
 

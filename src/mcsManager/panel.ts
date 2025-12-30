@@ -13,7 +13,7 @@ const logger = new Logger('mcsmanager-panel');
 export class MCSManagerPanel {
   private isInitialized = false;
 
-  api: MCSManagerAPI;
+  public readonly api: MCSManagerAPI;
 
   // 所有远程节点及其实例列表
   remotes: ServiceRemoteItemCustom[] = [];
@@ -25,7 +25,11 @@ export class MCSManagerPanel {
     public readonly ctx: Context,
     public readonly config: GLBotConfigType,
   ) {
-    this.api = new MCSManagerAPI(ctx.http, config.mcManagerHost);
+    this.api = new MCSManagerAPI(
+      ctx.http,
+      config.mcManagerHost,
+      config.mcManagerWs,
+    );
     this.initialize();
   }
 
