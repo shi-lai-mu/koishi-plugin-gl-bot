@@ -8,6 +8,8 @@ import MinecraftSyncMsg from '../queQiao';
 const logger = new Logger('gl-bot');
 
 export class GLBot {
+  static inject = ['database'];
+
   static Config = Schema.intersect([
     MinecraftSyncMsg.Config,
     MCManager.Config,

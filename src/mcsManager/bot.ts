@@ -7,6 +7,7 @@ import {
   ARKBotStartCommand,
   ARKBotStopCommand,
   MCBotListCommand,
+  MCBotOnlineTimeCommand,
   MCBotRestartCommand,
   MCBotStartCommand,
   MCBotStopCommand,
@@ -42,6 +43,7 @@ export class MCSManagerBot {
       MCBotStartCommand,
       MCBotStopCommand,
       MCBotCreateCommand,
+      MCBotOnlineTimeCommand,
 
       ARKBotListCommand,
       ARKBotRestartCommand,

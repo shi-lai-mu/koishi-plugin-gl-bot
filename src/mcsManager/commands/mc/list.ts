@@ -1,6 +1,10 @@
+import { isEqual } from 'lodash';
 import { formatDuration } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
-import { RemoteInstanceStatusName } from '../../constants';
+import {
+  RemoteInstanceStatusEnum,
+  RemoteInstanceStatusName,
+} from '../../constants';
 import { BotCommandBase } from '../base';
 
 /**
@@ -34,9 +38,15 @@ export class MCBotListCommand extends BotCommandBase {
     return `${'='.repeat(10)}服务器列表${'='.repeat(10)}\n${nameInstances
       .map(item => {
         const { cfg } = item.instance;
+        const lastDatetime = isEqual(
+          cfg.status,
+          RemoteInstanceStatusEnum.RUNNING,
+        )
+          ? Date.now()
+          : cfg.config.lastDatetime;
+
         const duration = formatDuration(
-          cfg.config.lastDatetime -
-            new Date(cfg.config.createDatetime).getTime(),
+          lastDatetime - new Date(cfg.config.createDatetime).getTime(),
         );
         return `- [${RemoteInstanceStatusName[cfg.status]}] ${cfg.config.nickname} 「${duration}」`;
       })

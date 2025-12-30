@@ -160,6 +160,9 @@ class MinecraftSyncMsg {
       return;
     }
 
+    // 在线时间逻辑
+    this.updatePlayerOnlineTime(data);
+
     const eventName = data.event_name ? getListeningEvent(data.event_name) : '';
     if (eventName === 'PlayerCommandPreprocessEvent') {
       return;
@@ -201,6 +204,82 @@ class MinecraftSyncMsg {
     if (data.server_name && sendMsg) {
       this.broadcastToChannels(sendMsg);
     }
+  }
+
+  private async updatePlayerOnlineTime(data: any) {
+    console.log({ data });
+
+    if (!['PlayerJoinEvent', 'PlayerQuitEvent'].includes(data.event_name)) {
+      return;
+    }
+
+    const user = await this.ctx.database.get('mcUser', {
+      uuid: data.player?.uuid,
+    });
+    console.log({ user });
+
+    if (user.length === 0) {
+      await this.ctx.database.create('mcUser', {
+        nickname: data.player?.nickname,
+        uuid: data.player?.uuid,
+        lastTime: new Date(),
+        level: data.player?.level || 0,
+        onlineTimeJSON: JSON.stringify({
+          mc: {
+            [data.player?.uuid]: 0,
+          },
+        }),
+      });
+      return;
+    }
+
+    if (data.event_name === 'PlayerJoinEvent') {
+      await this.ctx.database.set(
+        'mcUser',
+        { uuid: data.player?.uuid },
+        {
+          nickname: data.player?.nickname,
+          level: data.player?.experience_level || 0,
+          lastTime: new Date(),
+        },
+      );
+      return;
+    }
+
+    // 更新在线时间 （加入游戏时会更新lastTime，退出游戏时通过lastTime算出本次在线时间，加到onlineTimeJSON中）
+    if (data.event_name === 'PlayerQuitEvent') {
+      const lastTime = new Date(user[0].lastTime).getTime();
+      const nowTime = Date.now();
+      const onlineDuration = Math.floor((nowTime - lastTime) / 1000); // 在线时长，单位秒
+
+      let onlineTimeJSON: any = {};
+      try {
+        onlineTimeJSON = JSON.parse(user[0].onlineTimeJSON);
+      } catch (err) {
+        onlineTimeJSON = {};
+      }
+
+      if (!onlineTimeJSON.mc) {
+        onlineTimeJSON.mc = {};
+      }
+      if (!onlineTimeJSON.mc[data.player?.uuid]) {
+        onlineTimeJSON.mc[data.player?.uuid] = 0;
+      }
+      onlineTimeJSON.mc[data.player?.uuid] += onlineDuration;
+
+      await this.ctx.database.set(
+        'mcUser',
+        { uuid: data.player?.uuid },
+        {
+          nickname: data.player?.nickname,
+          lastTime: new Date(),
+          level: data.player?.experience_level || 0,
+          onlineTimeJSON: JSON.stringify(onlineTimeJSON),
+        },
+      );
+    }
+
+    console.log({ user });
   }
 
   private handleWsClose() {

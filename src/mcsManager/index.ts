@@ -3,6 +3,7 @@ import { GLBot, GLBotConfigType } from '../gl';
 import { MCSManagerBot } from './bot';
 import { MCManagerConfig } from './config';
 import { MCSManagerPanel } from './panel';
+import { registerMcSchedule } from './schedules';
 
 export class MCManager {
   static Config = Schema.intersect([MCManagerConfig.Base]);
@@ -13,9 +14,11 @@ export class MCManager {
 
   constructor(
     public readonly gl: GLBot,
-    private readonly ctx: Context,
+    public readonly ctx: Context,
     private readonly config: GLBotConfigType,
   ) {
+    registerMcSchedule(ctx);
+
     this.panel = new MCSManagerPanel(ctx, config);
     this.bot = new MCSManagerBot(this, ctx, config, this.panel);
     ctx.on('ready', this.initialize.bind(this));
