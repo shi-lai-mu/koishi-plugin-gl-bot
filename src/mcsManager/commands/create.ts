@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { Argv, h } from 'koishi';
 import { NapCatFileDownloader } from '../../utils';
 import { MCSManagerBot } from '../bot';
-import { MCBotCommandBase } from './base';
+import { MCBotCommandBase, MCBotCommandRole } from './base';
 
 /**
  * 服务器创建指令
@@ -10,7 +10,9 @@ import { MCBotCommandBase } from './base';
  * @example 服务器 创建
  */
 export class MCBotCreateCommand extends MCBotCommandBase {
-  command: string = '服务器.创建 <name>';
+  command: string[] = ['服务器.创建 <name...>', 'MC.创建 <name...>'];
+
+  roles = [MCBotCommandRole.Admin, MCBotCommandRole.Owner];
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);

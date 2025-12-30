@@ -9,7 +9,9 @@ import { MCBotCommandBase } from './base';
  * @example 服务器 列表
  */
 export class MCBotListCommand extends MCBotCommandBase {
-  command: string = '服务器.列表 <status>';
+  command: string[] = ['服务器.列表 <status>', 'MC.列表 <status>'];
+
+  roles = [];
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);

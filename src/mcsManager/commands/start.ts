@@ -6,7 +6,7 @@ import {
   RemoteInstanceStatusEnum,
   RemoteInstanceStatusName,
 } from '../constants';
-import { MCBotCommandBase } from './base';
+import { MCBotCommandBase, MCBotCommandRole } from './base';
 
 const tempSelections = new Map<number, string>();
 
@@ -16,7 +16,9 @@ const tempSelections = new Map<number, string>();
  * @example 服务器 启动 神话
  */
 export class MCBotStartCommand extends MCBotCommandBase {
-  command: string = '服务器.启动 <name...>';
+  command: string[] = ['服务器.启动 <name...>', 'MC.启动 <name...>'];
+
+  roles = [MCBotCommandRole.Admin, MCBotCommandRole.Owner];
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
@@ -39,7 +41,7 @@ export class MCBotStartCommand extends MCBotCommandBase {
     const nameInstances = await this.bot.panel.searchInstanceByName(name);
 
     if (nameInstances.length === 0) {
-      return `未找到名称包含 "${name}" 的服务器实例`;
+      return `未找到名称包含 "${name}" 的服务器`;
     }
 
     if (nameInstances.length > 1 && selectIndex === -1) {
@@ -56,7 +58,7 @@ export class MCBotStartCommand extends MCBotCommandBase {
       selectIndex !== -1 ? nameInstances[selectIndex] : nameInstances[0];
 
     if (!targetInstance || !targetInstance.instance) {
-      return `未找到名称包含 "${name}" 的服务器实例`;
+      return `未找到名称包含 "${name}" 的服务器`;
     }
 
     const { cfg } = targetInstance.instance;
