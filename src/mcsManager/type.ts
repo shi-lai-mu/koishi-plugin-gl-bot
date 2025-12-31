@@ -216,3 +216,19 @@ export type CreateInstanceConfig = {
   pingConfig: PingConfig;
   extraServiceConfig: ExtraServiceConfig;
 };
+
+export interface McUser {
+  nickname: string;
+  uuid: string;
+  address: string;
+  health: number;
+  max_health: number;
+  experience_level: number;
+  experience_progress: number;
+  total_experience: number;
+  is_op: boolean;
+  walk_speed: number;
+  x: number;
+  y: number;
+  z: number;
+}

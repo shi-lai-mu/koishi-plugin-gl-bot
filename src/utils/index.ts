@@ -49,3 +49,17 @@ export function formatDuration(milliseconds: number): string {
 
   return `${seconds}秒`;
 }
+
+export function formatOnlineTime(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}小时${minutes}分钟${remainingSeconds}秒`;
+  } else if (minutes > 0) {
+    return `${minutes}分钟${remainingSeconds}秒`;
+  } else {
+    return `${remainingSeconds}秒`;
+  }
+}

@@ -1,5 +1,65 @@
+import { formatOnlineTime } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
+import { McUser } from '../../type';
 import { BotCommandBase } from '../base';
+
+export class MCBotGameOnline extends BotCommandBase {
+  static list: Record<string, McUser> = {};
+
+  command: string[] = ['服务器.在线 <status>', 'MC.在线 <status>'];
+
+  roles = [];
+
+  constructor(public readonly bot: MCSManagerBot) {
+    super(bot);
+    this.initialize();
+  }
+
+  async handle(): Promise<string> {
+    try {
+      const users = await this.bot.ctx.database.get('mcUser', {});
+
+      const userRankings = Object.values(MCBotGameOnline.list)
+        .map(user => {
+          const dbUser = users.find(u => u.uuid === user.uuid);
+
+          const totalOnlineTime = +(
+            (Date.now() - (dbUser?.lastTime?.getTime() || 0)) /
+            1000
+          ).toFixed(0);
+
+          return {
+            ...user,
+            totalOnlineTime,
+          } as McUser & { totalOnlineTime: number };
+        })
+        .sort((a, b) => b.totalOnlineTime - a.totalOnlineTime)
+        .slice(0, 10);
+
+      let result = '==== 服务器在线玩家 ====\n';
+
+      const tag = [, '🥇', '🥈', '🥉'];
+
+      userRankings.forEach((user, index) => {
+        const rank = index + 1;
+        const medal = tag[rank] || `${rank}.`;
+        const onlineTimeStr = formatOnlineTime(user.totalOnlineTime);
+
+        result += `${medal} ${user.nickname} [HP: ${user.health.toFixed(1)} | LV: ${user.experience_level}] 「${onlineTimeStr}」\n`;
+        if (index < userRankings.length - 1) {
+          result += '\n';
+        }
+      });
+
+      result += '====================';
+
+      return result;
+    } catch (error) {
+      console.error('查询在线玩家失败:', error);
+      return '查询在线玩家时发生错误，请稍后重试';
+    }
+  }
+}
 
 /**
  * 服务器在线榜单指令
@@ -17,29 +77,28 @@ export class MCBotOnlineTimeCommand extends BotCommandBase {
     this.initialize();
   }
 
-  async handle(_, status?: string[]): Promise<string> {
+  async handle(): Promise<string> {
     try {
-      // 从数据库获取所有用户数据
       const users = await this.bot.ctx.database.get('mcUser', {});
 
       if (users.length === 0) {
         return '暂无玩家在线时长数据';
       }
 
-      // 计算每个用户的总在线时长并排序
       const userRankings = users
         .map(user => {
           let totalOnlineTime = 0;
-          try {
-            const onlineTimeData = JSON.parse(user.onlineTimeJSON || '{}');
-            if (onlineTimeData.mc && onlineTimeData.mc[user.uuid]) {
-              totalOnlineTime = onlineTimeData.mc[user.uuid];
-            }
-          } catch (error) {
-            console.warn(
-              `解析用户 ${user.nickname} 的在线时长数据失败:`,
-              error,
-            );
+
+          const onlineTimeData = JSON.parse(user.onlineTimeJSON || '{}');
+          if (onlineTimeData?.mc?.[user.uuid]) {
+            totalOnlineTime = onlineTimeData.mc[user.uuid];
+          }
+
+          if (MCBotGameOnline.list[user.uuid]) {
+            totalOnlineTime += +(
+              (Date.now() - user.lastTime.getTime()) /
+              1000
+            ).toFixed(0);
           }
 
           return {
@@ -53,33 +112,13 @@ export class MCBotOnlineTimeCommand extends BotCommandBase {
         .sort((a, b) => b.totalOnlineTime - a.totalOnlineTime)
         .slice(0, 10);
 
-      const formatTime = (seconds: number): string => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
-
-        if (hours > 0) {
-          return `${hours}小时${minutes}分钟${remainingSeconds}秒`;
-        } else if (minutes > 0) {
-          return `${minutes}分钟${remainingSeconds}秒`;
-        } else {
-          return `${remainingSeconds}秒`;
-        }
-      };
-
       let result = '==== 服务器在线时长排行榜 ====\n';
 
+      const tag = [, '🥇', '🥈', '🥉'];
       userRankings.forEach((user, index) => {
         const rank = index + 1;
-        const medal =
-          rank === 1
-            ? '🥇'
-            : rank === 2
-              ? '🥈'
-              : rank === 3
-                ? '🥉'
-                : `${rank}.`;
-        const onlineTimeStr = formatTime(user.totalOnlineTime);
+        const medal = tag[rank] || `${rank}.`;
+        const onlineTimeStr = formatOnlineTime(user.totalOnlineTime);
 
         result += `${medal} ${user.nickname} 「${onlineTimeStr}」\n`;
         if (index < userRankings.length - 1) {

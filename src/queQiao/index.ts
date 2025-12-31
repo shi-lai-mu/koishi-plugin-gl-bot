@@ -4,6 +4,7 @@ import { Rcon } from 'rcon-client';
 import { RawData, WebSocket } from 'ws';
 import { IS_DEV } from '../constants';
 import { GLBotConfigType } from '../gl';
+import { MCBotGameOnline } from '../mcsManager/commands/mc/online';
 import { clearSessionContentToMcMessage } from '../utils';
 import McWss from './mcwss';
 import { RconConf, WsConf, getListeningEvent } from './values';
@@ -164,7 +165,10 @@ class MinecraftSyncMsg {
     this.updatePlayerOnlineTime(data);
 
     const eventName = data.event_name ? getListeningEvent(data.event_name) : '';
-    if (eventName === 'PlayerCommandPreprocessEvent') {
+    if (
+      !eventName ||
+      ['PlayerCommandPreprocessEvent', 'PlayerDeathEvent'].includes(eventName)
+    ) {
       return;
     }
 
@@ -207,7 +211,10 @@ class MinecraftSyncMsg {
   }
 
   private async updatePlayerOnlineTime(data: any) {
-    console.log({ data });
+    if (data.player) {
+      MCBotGameOnline.list[data.player?.uuid] = data.player;
+    }
+    console.log(data);
 
     if (!['PlayerJoinEvent', 'PlayerQuitEvent'].includes(data.event_name)) {
       return;
@@ -216,7 +223,8 @@ class MinecraftSyncMsg {
     const user = await this.ctx.database.get('mcUser', {
       uuid: data.player?.uuid,
     });
-    console.log({ user });
+
+    MCBotGameOnline.list[data.player?.uuid] = data.player;
 
     if (user.length === 0) {
       await this.ctx.database.create('mcUser', {
@@ -251,6 +259,8 @@ class MinecraftSyncMsg {
       const lastTime = new Date(user[0].lastTime).getTime();
       const nowTime = Date.now();
       const onlineDuration = Math.floor((nowTime - lastTime) / 1000); // 在线时长，单位秒
+
+      delete MCBotGameOnline.list[user[0].uuid];
 
       let onlineTimeJSON: any = {};
       try {
