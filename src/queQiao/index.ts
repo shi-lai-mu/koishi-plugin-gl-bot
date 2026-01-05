@@ -3,7 +3,7 @@ import { isString } from 'lodash';
 import { Rcon } from 'rcon-client';
 import { RawData, WebSocket } from 'ws';
 import { IS_DEV } from '../constants';
-import { GLBotConfigType } from '../gl';
+import { GLQueQiaoAdapter } from '../gl/queqiao.adapter';
 import { MCBotGameOnline } from '../mcsManager/commands/mc/online';
 import { clearSessionContentToMcMessage } from '../utils';
 import McWss from './mcwss';
@@ -35,23 +35,28 @@ export interface WsMessageData {
 }
 
 class MinecraftSyncMsg {
-  private ws: WebSocket | undefined;
-  private rcon: Rcon;
-  private isDisposing = false;
-  private reconnectAttempts = 0;
-  private reconnectIntervalId: NodeJS.Timeout | null = null;
-  private plFork: any;
-  private enUS: any;
-  private zhCN: any;
+  public ws: WebSocket | undefined;
+  public rcon: Rcon;
+  public isDisposing = false;
+  public reconnectAttempts = 0;
+  public reconnectIntervalId: NodeJS.Timeout | null = null;
+  public plFork: McWss;
+  public enUS: any;
+  public zhCN: any;
+
+  public get serverName() {
+    return this.config.serverName ?? '--';
+  }
 
   constructor(
-    private ctx: Context,
-    private config: GLBotConfigType,
+    public ctx: Context,
+    public adapter: GLQueQiaoAdapter,
+    public config: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>,
   ) {
     this.initialize();
   }
 
-  private initialize() {
+  public initialize() {
     this.setupRcon();
     this.setupWebSocket();
     this.setupWatchChannel();
@@ -61,8 +66,8 @@ class MinecraftSyncMsg {
     this.ctx.i18n.define('en-US', enUS);
   }
 
-  private setupRcon() {
-    if (!this.config.rconEnable) {
+  public setupRcon() {
+    if (!this.config.rconServerHost) {
       return;
     }
 
@@ -73,31 +78,35 @@ class MinecraftSyncMsg {
     });
 
     this.connectToRcon().catch(err => {
-      logger.error('RCON服务器连接失败:', err);
+      logger.error(`[${this.serverName}] RCON服务器连接失败:`, err);
     });
   }
 
-  private async connectToRcon() {
+  public async connectToRcon() {
     try {
       await this.rcon.connect();
-      logger.info('已连接到RCON服务器');
+      logger.info(`[${this.serverName}] 已连接到RCON服务器`);
     } catch (err) {
-      logger.error('连接到RCON服务器时发生错误:', err);
+      logger.error(`[${this.serverName}] 连接到RCON服务器时发生错误:`, err);
       throw err;
     }
   }
 
-  private setupWebSocket() {
+  public setupWebSocket() {
     if (this.config.wsServer === '服务端') {
-      this.plFork = this.ctx.plugin(McWss, this.config);
-      // this.plFork = new McWss(this.ctx, this.config);
+      // this.plFork = this.ctx.plugin(McWss, this.adapter, this.config);
+      this.plFork = new McWss(
+        this.ctx,
+        this.adapter,
+        this.config as McWss.Config,
+      );
       return;
     } else {
       this.connectWebSocket();
     }
   }
 
-  private connectWebSocket() {
+  public connectWebSocket() {
     const headers = {
       'x-self-name': encodeURIComponent(this.config.serverName),
       Authorization: `Bearer ${this.config.Token}`,
@@ -114,7 +123,7 @@ class MinecraftSyncMsg {
     this.bindWebSocketEvents();
   }
 
-  private bindWebSocketEvents() {
+  public bindWebSocketEvents() {
     if (!this.ws) {
       return;
     }
@@ -125,12 +134,12 @@ class MinecraftSyncMsg {
     this.ws.on('error', err => this.handleWsError(err));
   }
 
-  private handleWsOpen() {
-    logger.info('成功连上websocket服务器');
+  public handleWsOpen() {
+    logger.info(`[${this.serverName}] 成功连上websocket服务器`);
 
-    if (!this.config.hideConnect) {
-      this.broadcastToChannels('Websocket服务器连接成功!');
-    }
+    // if (!this.config.hideConnect) {
+    //   this.broadcastToChannels('Websocket服务器连接成功!');
+    // }
 
     if (!IS_DEV) {
       const msgData: WsMessageData = {
@@ -149,7 +158,7 @@ class MinecraftSyncMsg {
     }
   }
 
-  private handleWsMessage(buffer: RawData) {
+  public handleWsMessage(buffer: RawData) {
     // Convert RawData to string
     const dataStr = buffer.toString();
     let data: any;
@@ -202,19 +211,52 @@ class MinecraftSyncMsg {
     sendMsg = this.ctx.i18n.render(
       [this.config.locale ? this.config.locale : 'zh-CN'],
       [`minecraft-sync-msg.action.${eventName}`],
-      [data.player?.nickname, sendMsg],
+      [this.config.serverName ?? 'MC', data.player?.nickname, sendMsg],
     );
+
+    /// 多服消息互通逻辑
+    // if (data.event_name && isEqual(eventName, 'AsyncPlayerChatEvent')) {
+    //   Object.entries(this.adapter.servers).forEach(
+    //     async ([serverName, server]) => {
+    //       if (!isEqual(serverName, this.config.serverName)) {
+    //         const msgData: WsMessageData = {
+    //           api: 'broadcast',
+    //           data: {
+    //             message: [
+    //               {
+    //                 text: `[${this.config.serverName}] <${data.player?.nickname}> ${clearSessionContentToMcMessage(data.message)}`,
+    //                 color:
+    //                   server.extractAndRemoveColor(server.config.joinMsg)
+    //                     .color || 'white',
+    //               },
+    //             ],
+    //           },
+    //         };
+    //         server.ws?.send(JSON.stringify(msgData));
+    //       }
+    //     },
+    //   );
+    // }
 
     if (data.server_name && sendMsg) {
       this.broadcastToChannels(sendMsg);
     }
   }
 
-  private async updatePlayerOnlineTime(data: any) {
-    if (data.player) {
-      MCBotGameOnline.list[data.player?.uuid] = data.player;
+  public async updatePlayerOnlineTime(data: any) {
+    if (!MCBotGameOnline.list[this.serverName]) {
+      MCBotGameOnline.list[this.serverName] = {
+        config: this.config,
+        list: {},
+      };
     }
-    console.log(data);
+
+    const playerId = data.player?.uuid + '|' + this.serverName;
+
+    if (data.player) {
+      MCBotGameOnline.list[this.serverName].list[data.player?.nickname] =
+        data.player;
+    }
 
     if (!['PlayerJoinEvent', 'PlayerQuitEvent'].includes(data.event_name)) {
       return;
@@ -224,8 +266,6 @@ class MinecraftSyncMsg {
       uuid: data.player?.uuid,
     });
 
-    MCBotGameOnline.list[data.player?.uuid] = data.player;
-
     if (user.length === 0) {
       await this.ctx.database.create('mcUser', {
         nickname: data.player?.nickname,
@@ -234,7 +274,7 @@ class MinecraftSyncMsg {
         level: data.player?.level || 0,
         onlineTimeJSON: JSON.stringify({
           mc: {
-            [data.player?.uuid]: 0,
+            [playerId]: 0,
           },
         }),
       });
@@ -260,9 +300,9 @@ class MinecraftSyncMsg {
       const nowTime = Date.now();
       const onlineDuration = Math.floor((nowTime - lastTime) / 1000); // 在线时长，单位秒
 
-      delete MCBotGameOnline.list[user[0].uuid];
+      delete MCBotGameOnline.list[this.serverName].list[data.player?.nickname];
 
-      let onlineTimeJSON: any = {};
+      let onlineTimeJSON: { mc?: Record<string, number> } = {};
       try {
         onlineTimeJSON = JSON.parse(user[0].onlineTimeJSON);
       } catch (err) {
@@ -272,10 +312,10 @@ class MinecraftSyncMsg {
       if (!onlineTimeJSON.mc) {
         onlineTimeJSON.mc = {};
       }
-      if (!onlineTimeJSON.mc[data.player?.uuid]) {
-        onlineTimeJSON.mc[data.player?.uuid] = 0;
+      if (!onlineTimeJSON.mc[playerId]) {
+        onlineTimeJSON.mc[playerId] = 0;
       }
-      onlineTimeJSON.mc[data.player?.uuid] += onlineDuration;
+      onlineTimeJSON.mc[playerId] += onlineDuration;
 
       await this.ctx.database.set(
         'mcUser',
@@ -288,37 +328,42 @@ class MinecraftSyncMsg {
         },
       );
     }
-
-    console.log({ user });
   }
 
-  private handleWsClose() {
+  public handleWsClose() {
     if (this.isDisposing) {
       return;
     }
 
-    if (!this.config.hideConnect) {
-      this.broadcastToChannels('与Websocket服务器断开连接!');
-    }
+    // if (!this.config.hideConnect) {
+    //   this.broadcastToChannels(
+    //     `[${this.serverName}] 与Websocket服务器断开连接!`,
+    //   );
+    // }
 
-    logger.error('非正常与Websocket服务器断开连接!');
+    logger.error(`[${this.serverName}] 非正常与Websocket服务器断开连接!`);
     this.ws = undefined;
     this.reconnectWebSocket();
   }
 
-  private handleWsError(err: Error) {
+  public handleWsError(err: Error) {
     if (this.isDisposing) {
       return;
     }
 
-    if (!this.config.hideConnect) {
-      this.broadcastToChannels('与Websocket服务器断通信时发生错误!');
-    }
+    // if (!this.config.hideConnect) {
+    //   this.broadcastToChannels(
+    //     `[${this.serverName}] 与Websocket服务器断通信时发生错误!`,
+    //   );
+    // }
 
-    logger.error('与Websocket服务器断通信时发生错误:', err);
+    logger.error(
+      `[${this.serverName}] 与Websocket服务器断通信时发生错误:`,
+      err,
+    );
   }
 
-  private setupWatchChannel() {
+  public setupWatchChannel() {
     this.ctx.on('message', async session => {
       this.config.watchChannel.forEach(channel => {
         const [platform, channelId] = channel.split(':');
@@ -342,20 +387,22 @@ class MinecraftSyncMsg {
     });
   }
 
-  private async reconnectWebSocket() {
+  public async reconnectWebSocket() {
     this.clearReconnectInterval();
 
     this.reconnectIntervalId = setInterval(async () => {
-      if (this.reconnectAttempts >= this.config.maxReconnectCount) {
+      if (this.reconnectAttempts >= (this.config.maxReconnectCount || 3)) {
         logger.error(
-          `已达到最大重连次数 (${this.config.maxReconnectCount} 次)，停止重连。`,
+          `[${this.serverName}] 已达到最大重连次数 (${this.config.maxReconnectCount} 次)，停止重连。`,
         );
         this.clearReconnectInterval();
         return;
       }
 
       this.reconnectAttempts++;
-      logger.info(`尝试第 ${this.reconnectAttempts} 次重连...`);
+      logger.info(
+        `[${this.serverName}] 尝试第 ${this.reconnectAttempts} 次重连...`,
+      );
 
       try {
         const headers = {
@@ -372,32 +419,34 @@ class MinecraftSyncMsg {
         );
 
         ws.on('open', () => {
-          logger.info('WebSocket 重连成功');
+          logger.info(`[${this.serverName}] WebSocket 重连成功`);
           this.clearReconnectInterval();
           this.ws = ws;
           this.bindWebSocketEvents();
         });
 
         ws.on('error', err => {
-          logger.error('重连时发生错误:', err);
+          logger.error(`[${this.serverName}] 重连时发生错误:`, err);
           ws.close();
         });
 
         ws.on('close', () => {
           if (!this.isDisposing) {
-            logger.info('WebSocket 再次断开，将继续尝试重连...');
+            logger.info(
+              `[${this.serverName}] WebSocket 再次断开，将继续尝试重连...`,
+            );
           }
         });
       } catch (err) {
-        logger.error('创建WebSocket时发生错误:', err);
-        if (this.reconnectAttempts >= this.config.maxReconnectCount) {
+        logger.error(`[${this.serverName}] 创建WebSocket时发生错误:`, err);
+        if (this.reconnectAttempts >= (this.config.maxReconnectCount || 3)) {
           this.clearReconnectInterval();
         }
       }
     }, this.config.maxReconnectInterval);
   }
 
-  private clearReconnectInterval() {
+  public clearReconnectInterval() {
     if (this.reconnectIntervalId) {
       clearInterval(this.reconnectIntervalId);
       this.reconnectIntervalId = null;
@@ -405,7 +454,7 @@ class MinecraftSyncMsg {
     this.reconnectAttempts = 0;
   }
 
-  private setupMessageHandler() {
+  public setupMessageHandler() {
     this.ctx.on('message', async session => {
       if (!this.isValidChannel(session)) {
         return;
@@ -421,7 +470,7 @@ class MinecraftSyncMsg {
     });
   }
 
-  private isValidChannel(session: any): boolean {
+  public isValidChannel(session: any): boolean {
     return (
       this.config.sendToChannel.includes(
         `${session.platform}:${session.channelId}`,
@@ -429,14 +478,14 @@ class MinecraftSyncMsg {
     );
   }
 
-  private isMessageCommand(session: any): boolean {
+  public isMessageCommand(session: any): boolean {
     return (
       session.content.startsWith(this.config.sendprefix) &&
       session.content !== this.config.sendprefix
     );
   }
 
-  private isRconCommand(session: any): boolean {
+  public isRconCommand(session: any): boolean {
     return (
       this.config.rconEnable &&
       this.config.cmdprefix &&
@@ -445,7 +494,7 @@ class MinecraftSyncMsg {
     );
   }
 
-  private async handleMessageCommand(session: any) {
+  public async handleMessageCommand(session: any) {
     let imgurl: any = '<unknown image url>';
     if (
       session.content.includes('<img') &&
@@ -501,7 +550,7 @@ class MinecraftSyncMsg {
     }
   }
 
-  private async handleRconCommand(session: any) {
+  public async handleRconCommand(session: any) {
     const cmd = session.content
       .replaceAll('&amp;', '§')
       .replaceAll('&', '§')
@@ -530,36 +579,39 @@ class MinecraftSyncMsg {
     session.send(response?.replaceAll(/§./g, '') || '');
   }
 
-  private async sendRconCommand(command: string): Promise<string> {
+  public async sendRconCommand(command: string): Promise<string> {
+    if (!this.rcon.authenticated) {
+      return '';
+    }
+
     try {
       const response = await this.rcon.send(command);
       return response;
     } catch (err) {
-      logger.error('发送RCON命令时发生错误:', err);
+      logger.error(`[${this.serverName}] 发送RCON命令时发生错误:`, err);
       throw err;
     }
   }
 
-  private extractAndRemoveColor(input: string): MessageColor {
+  public extractAndRemoveColor(input?: string): MessageColor {
     const regex = /&(\w+)&/;
-    const match = input.match(regex);
+    const match = input?.match(regex) ?? [];
 
     if (match) {
       const color = match[1];
-      const output = input.replace(regex, '');
+      const output = input?.replace(regex, '');
       return { output, color };
     }
 
-    return { output: input, color: '' };
+    return { output: input ?? '', color: '' };
   }
 
-  private broadcastToChannels(message: string | h[]) {
+  public broadcastToChannels(message: string | h[]) {
     this.ctx.bots.forEach((bot: Bot) => {
-      const channels = this.config.sendToChannel
-        .filter(str => str.includes(`${bot.platform}`))
-        .map(str => str.replace(`${bot.platform}:`, ''));
-
-      console.log(this.config.sendToChannel);
+      const channels =
+        this.config.sendToChannel
+          ?.filter(str => str.includes(`${bot.platform}`))
+          ?.map(str => str.replace(`${bot.platform}:`, '')) ?? [];
 
       if (process.env.NODE_ENV === 'development') {
         logger.info(
@@ -573,7 +625,7 @@ class MinecraftSyncMsg {
     });
   }
 
-  private setupDisposeHandler() {
+  public setupDisposeHandler() {
     this.ctx.on('dispose', async () => {
       this.isDisposing = true;
       await this.dispose();
@@ -581,10 +633,7 @@ class MinecraftSyncMsg {
     });
   }
 
-  private async dispose() {
-    if (this.plFork) {
-      await this.plFork.dispose();
-    }
+  public async dispose() {
     this.ctx.registry.delete(McWss);
 
     if (this.ws) {

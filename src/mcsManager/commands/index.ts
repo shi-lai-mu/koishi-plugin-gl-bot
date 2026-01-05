@@ -1,5 +1,6 @@
 export { BotCommandBase } from './base';
 
+export { MCBotHealthCommand } from './mc/health';
 export { MCBotListCommand } from './mc/list';
 export { MCBotGameOnline, MCBotOnlineTimeCommand } from './mc/online';
 export { MCBotRestartCommand } from './mc/restart';

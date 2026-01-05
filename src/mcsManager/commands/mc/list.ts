@@ -22,10 +22,19 @@ export class MCBotListCommand extends BotCommandBase {
     this.initialize();
   }
 
+  async readServerProperties(daemonId: string, instanceId: string) {
+    return this.bot.panel.api.readServerProperties(daemonId, instanceId);
+  }
+
   async handle(_, status?: string[]): Promise<string> {
     await this.bot.panel.handleRemoteServices();
 
-    const filteredStatus = status?.at(0);
+    let filteredStatus = status?.at(0) ?? '运行中';
+
+    if (filteredStatus === '全部') {
+      filteredStatus = '';
+    }
+
     const nameInstances = (
       await this.bot.panel.searchInstanceByName('')
     ).filter(
@@ -35,21 +44,35 @@ export class MCBotListCommand extends BotCommandBase {
         RemoteInstanceStatusName[item.instance.cfg.status] === filteredStatus,
     );
 
-    return `${'='.repeat(10)}服务器列表${'='.repeat(10)}\n${nameInstances
-      .map(item => {
-        const { cfg } = item.instance;
-        const lastDatetime = isEqual(
-          cfg.status,
-          RemoteInstanceStatusEnum.RUNNING,
-        )
-          ? Date.now()
-          : cfg.config.lastDatetime;
+    const list = [];
 
-        const duration = formatDuration(
-          lastDatetime - new Date(cfg.config.createDatetime).getTime(),
+    for (const item of nameInstances) {
+      let properties = {};
+      const { cfg } = item.instance;
+      const lastDatetime = isEqual(cfg.status, RemoteInstanceStatusEnum.RUNNING)
+        ? Date.now()
+        : cfg.config.lastDatetime;
+
+      const duration = formatDuration(
+        lastDatetime - new Date(cfg.config.createDatetime).getTime(),
+      );
+
+      try {
+        properties = await this.readServerProperties(
+          item.remote.uuid,
+          item.instance.cfg.instanceUuid,
         );
-        return `- [${RemoteInstanceStatusName[cfg.status]}] ${cfg.config.nickname} 「${duration}」`;
-      })
-      .join('\n')}\n ${'='.repeat(28)} `;
+      } catch (err) {
+        properties = {};
+      }
+
+      list.push(
+        `- ${RemoteInstanceStatusName[cfg.status]} ${cfg.config.nickname} 「${duration}」[端口 ${properties?.['server-port'] || '--'}]`
+          .replace('运行中', '✅')
+          .replace('已停止', '❌'),
+      );
+    }
+
+    return `${'='.repeat(10)}服务器列表${'='.repeat(10)}\n${list.join('\n')}\n ${'='.repeat(28)} `;
   }
 }

@@ -1,10 +1,18 @@
+import { isEmpty, isEqual, merge } from 'lodash';
+import MinecraftSyncMsg from '../../../queQiao';
 import { formatOnlineTime } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
 import { McUser } from '../../type';
 import { BotCommandBase } from '../base';
 
 export class MCBotGameOnline extends BotCommandBase {
-  static list: Record<string, McUser> = {};
+  static list: Record<
+    string,
+    {
+      config: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>;
+      list: Record<string, McUser>;
+    }
+  > = {};
 
   command: string[] = ['服务器.在线 <status>', 'MC.在线 <status>'];
 
@@ -15,18 +23,75 @@ export class MCBotGameOnline extends BotCommandBase {
     this.initialize();
   }
 
+  async getOnlinePlayers(connect: MinecraftSyncMsg) {
+    // There are 2 of a max of 2026 players online: xxx, xxxx
+    return (
+      (await connect.sendRconCommand('list'))
+        ?.match(/There are \d+ of a max of \d+ players online: (.*)/)?.[1]
+        ?.split(',')
+        ?.map(name => name.trim())
+        ?.filter(name => name.length > 0) ?? []
+    );
+  }
+
   async handle(): Promise<string> {
+    // 先获取在线人数
+    const rconPlayersResults: Record<
+      string,
+      {
+        config: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>;
+        list: Record<string, Partial<McUser>>;
+      }
+    > = {};
+
+    for (const [name, server] of Object.entries(
+      this.bot.manager.gl.queQiaoAdapter.servers,
+    )) {
+      const online = await this.getOnlinePlayers(server);
+      const serverConfig = server.config;
+
+      rconPlayersResults[server.config.serverName || ''] = {
+        config: serverConfig,
+        list: online.reduce((acc, nickname) => {
+          acc[nickname] = {
+            nickname,
+            uuid: '', // UUID 需要通过其他方式获取
+            server: serverConfig,
+          };
+
+          return acc;
+        }, {}),
+      };
+    }
+
+    // 内存中的在线玩家
     try {
       const users = await this.bot.ctx.database.get('mcUser', {});
+      const allOnlineUsers: McUser[] = Object.values(
+        merge({}, rconPlayersResults, MCBotGameOnline.list),
+      ).flatMap(server => {
+        return Object.values(server.list).map(user => {
+          user.server = server.config;
 
-      const userRankings = Object.values(MCBotGameOnline.list)
+          return user;
+        });
+      });
+
+      const userRankings = allOnlineUsers
         .map(user => {
-          const dbUser = users.find(u => u.uuid === user.uuid);
+          const dbUser = users.find(
+            u => u.uuid === user.uuid || u.nickname === user.nickname,
+          );
 
-          const totalOnlineTime = +(
+          let totalOnlineTime = +(
             (Date.now() - (dbUser?.lastTime?.getTime() || 0)) /
             1000
           ).toFixed(0);
+
+          // rcon 未获取到 UUID 情况
+          if (isEmpty(user.uuid)) {
+            totalOnlineTime = -1;
+          }
 
           return {
             ...user,
@@ -36,22 +101,22 @@ export class MCBotGameOnline extends BotCommandBase {
         .sort((a, b) => b.totalOnlineTime - a.totalOnlineTime)
         .slice(0, 10);
 
-      let result = '==== 服务器在线玩家 ====\n';
-
-      const tag = [, '🥇', '🥈', '🥉'];
+      let result = `==== 在线 玩家 ====\n`;
 
       userRankings.forEach((user, index) => {
         const rank = index + 1;
-        const medal = tag[rank] || `${rank}.`;
-        const onlineTimeStr = formatOnlineTime(user.totalOnlineTime);
+        const onlineTimeStr = isEqual(user.totalOnlineTime, -1)
+          ? ''
+          : `「${formatOnlineTime(user.totalOnlineTime)}」`;
 
-        result += `${medal} ${user.nickname} [HP: ${user.health.toFixed(1)} | LV: ${user.experience_level}] 「${onlineTimeStr}」\n`;
-        if (index < userRankings.length - 1) {
-          result += '\n';
-        }
+        result += `[${user.server.serverName ?? '-'}] ${rank}. ${user.nickname} ${onlineTimeStr}\n`;
       });
 
-      result += '====================';
+      result += '=================';
+
+      if (userRankings.length === 0) {
+        return '当前没有在线玩家';
+      }
 
       return result;
     } catch (error) {

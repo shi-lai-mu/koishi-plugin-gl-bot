@@ -3,7 +3,7 @@ import { Context, Logger, Schema } from 'koishi';
 import { IS_DEV } from '../constants';
 import { MCManager } from '../mcsManager';
 import { NapCat } from '../napCat';
-import MinecraftSyncMsg from '../queQiao';
+import { GLQueQiaoAdapter } from './queqiao.adapter';
 
 const logger = new Logger('gl-bot');
 
@@ -11,21 +11,23 @@ export class GLBot {
   static inject = ['database'];
 
   static Config = Schema.intersect([
-    MinecraftSyncMsg.Config,
+    // MinecraftSyncMsg.Config,
     MCManager.Config,
     NapCat.Config,
   ]);
 
-  private mcSyncMsg: MinecraftSyncMsg;
-  private mcsManager: MCManager;
-  public napCat: NapCat;
+  // private mcSyncMsg: MinecraftSyncMsg;
+  public readonly mcsManager: MCManager;
+  public readonly queQiaoAdapter: GLQueQiaoAdapter;
+  public readonly napCat: NapCat;
 
   constructor(
     private ctx: Context,
     private config: GLBotConfigType,
   ) {
-    this.mcSyncMsg = new MinecraftSyncMsg(ctx, config);
+    // this.mcSyncMsg = new MinecraftSyncMsg(ctx, config);
     this.mcsManager = new MCManager(this, ctx, config);
+    this.queQiaoAdapter = new GLQueQiaoAdapter(this, ctx, config);
     this.napCat = new NapCat(ctx, config);
     this.initialize();
   }

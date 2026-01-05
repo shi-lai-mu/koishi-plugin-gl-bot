@@ -2,6 +2,7 @@ import { IncomingMessage } from 'http';
 import { Bot, Context, h, Logger, Schema } from 'koishi';
 import { WebSocket, WebSocketServer } from 'ws';
 import { WsMessageData } from '.';
+import { GLQueQiaoAdapter } from '../gl/queqiao.adapter';
 import { getListeningEvent, getSubscribedEvents, WsConf } from './values';
 // import zhCN from "./locale/zh-CN.json";
 // import enUS from "./locale/en-US.json";
@@ -9,13 +10,17 @@ const zhCN = require('./locale/zh-CN.json');
 const enUS = require('./locale/en-US.json');
 
 class McWss {
-  private conf: McWss.Config;
-  private logger = new Logger('Minecraft-sync-msg-Wss');
-  private wss: WebSocketServer;
-  private ctx: Context;
-  private connectedClients: Set<WebSocket> = new Set();
+  public conf: McWss.Config;
+  public logger = new Logger('Minecraft-sync-msg-Wss');
+  public wss: WebSocketServer;
+  public ctx: Context;
+  public connectedClients: Set<WebSocket> = new Set();
 
-  constructor(ctx: Context, cfg: McWss.Config) {
+  constructor(
+    ctx: Context,
+    public adapter: GLQueQiaoAdapter,
+    cfg: McWss.Config,
+  ) {
     this.conf = cfg;
     this.ctx = ctx;
 
@@ -40,7 +45,7 @@ class McWss {
     });
   }
 
-  private setupWebSocketHandlers() {
+  public setupWebSocketHandlers() {
     this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
       const msgData: WsMessageData = {
         api: 'broadcast',
@@ -162,10 +167,12 @@ class McWss {
     });
   }
 
-  private setupMessageHandler() {
+  public setupMessageHandler() {
     let imgurl: any = '<unknown image url>';
     this.ctx.on('message', async session => {
-      // this.ctx.logger.info(`收到聊天消息: ${session.content} 来自 ${session.platform}:${session.channelId}`);
+      // this.ctx.logger.info(
+      //   `收到聊天消息: ${session.content} 来自 ${session.platform}:${session.channelId}`,
+      // );
       if (
         session.content.includes('<img') &&
         h.select(session.content, 'img')[0]?.type === 'img' &&
@@ -200,6 +207,38 @@ class McWss {
                   : h.select(session.content, 'at')[0]?.attrs?.id
               }]`,
             );
+          // console.log(this.adapter.servers);
+
+          // Object.entries(this.adapter.servers).forEach(
+          //   async ([name, server]) => {
+          //     console.log(
+          //       name,
+          //       this.conf.serverName,
+          //       !isEqual(name, this.conf.serverName),
+          //     );
+
+          //     if (!isEqual(name, this.conf.serverName)) {
+          //       console.log(
+          //         `[${this.conf.serverName}] <${session.username}> ${clearSessionContentToMcMessage(session.content)}`,
+          //       );
+
+          //       const msgData: WsMessageData = {
+          //         api: 'broadcast',
+          //         data: {
+          //           message: [
+          //             {
+          //               text: `[${this.conf.serverName}] <${session.username}> ${clearSessionContentToMcMessage(session.content)}`,
+          //               color:
+          //                 server.extractAndRemoveColor(server.config.joinMsg)
+          //                   .color || 'white',
+          //             },
+          //           ],
+          //         },
+          //       };
+          //       server.ws?.send(JSON.stringify(msgData));
+          //     }
+          //   },
+          // );
           if (this.connectedClients.size > 0) {
             const msgData: WsMessageData = {
               api: 'broadcast',

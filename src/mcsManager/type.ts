@@ -1,3 +1,4 @@
+import MinecraftSyncMsg from '../queQiao';
 import { RemoteInstanceStatusEnum } from './constants';
 import { MCSManagerInstance } from './instance';
 
@@ -231,4 +232,6 @@ export interface McUser {
   x: number;
   y: number;
   z: number;
+
+  server?: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>;
 }

@@ -6,7 +6,10 @@ import { MCSManagerPanel } from './panel';
 import { registerMcSchedule } from './schedules';
 
 export class MCManager {
-  static Config = Schema.intersect([MCManagerConfig.Base]);
+  static Config = Schema.intersect([
+    MCManagerConfig.Base,
+    MCManagerConfig.QueQiao,
+  ]);
 
   private panel: MCSManagerPanel;
 

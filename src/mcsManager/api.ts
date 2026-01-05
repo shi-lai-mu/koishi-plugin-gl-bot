@@ -11,7 +11,7 @@ import {
 } from './type';
 
 import { IS_DEV } from '../constants';
-import createInstanceUpload from './json/createInstanceUpload.json';
+const createInstanceUpload = require('./json/createInstanceUpload.json');
 
 export class MCSManagerAPI {
   userInfo: UserInfo;
@@ -49,7 +49,7 @@ export class MCSManagerAPI {
 
   async getUserInfo() {
     const result = await this.http<MCManagerPanelResponse<UserInfo>>(
-      `${this.baseUrl}/auth/`,
+      `${this.baseUrl}/auth`,
       {
         headers: this.requestHeaders,
       },
@@ -380,6 +380,27 @@ export class MCSManagerAPI {
     );
 
     return result.status === 200;
+  }
+
+  async readServerProperties(
+    daemonId: string,
+    instanceId: string,
+  ): Promise<Record<string, never>> {
+    return (
+      await this.http<MCManagerPanelResponse<Record<string, never>>>(
+        `${this.baseUrl}/protected_instance/process_config/file`,
+        {
+          headers: this.requestHeaders,
+          params: {
+            daemonId,
+            uuid: instanceId,
+            fileName: 'server.properties',
+            type: 'properties',
+            token: this.userInfo.token,
+          },
+        },
+      )
+    ).data.data;
   }
 }
 

@@ -1,5 +1,3 @@
-import { h } from 'koishi';
-
 /**
  * 清洗数据防止QQ脏数据发送到游戏内
  */
@@ -26,9 +24,10 @@ export const clearSessionContentToMcMessage = (content: string) => {
       .replaceAll(
         /<at.*\/>/gi,
         `@[${
-          h.select(content, 'at')[0]?.attrs?.name
-            ? h.select(content, 'at')[0]?.attrs?.name
-            : h.select(content, 'at')[0]?.attrs?.id
+          // h.select(content, 'at')[0]?.attrs?.name
+          //   ? h.select(content, 'at')[0]?.attrs?.name
+          //   : h.select(content, 'at')[0]?.attrs?.id
+          '神秘人'
         }]`,
       )
   );

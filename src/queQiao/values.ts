@@ -118,10 +118,10 @@ export const eventList = [
 // 事件映射
 export function getSubscribedEvents(binaryInput: number): string[] {
   const subscribedEvents: string[] = [];
-  const eventValues = Object.values(mcEvent).filter(
+  const eventValues = Object.values(mcEvent)?.filter(
     value => typeof value === 'number',
   ) as number[];
-  const eventNames = Object.keys(mcEvent).filter(key => isNaN(Number(key)));
+  const eventNames = Object.keys(mcEvent)?.filter(key => isNaN(Number(key)));
 
   for (let i = 0; i < eventValues.length; i++) {
     if ((binaryInput & eventValues[i]) !== 0) {
