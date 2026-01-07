@@ -1,5 +1,6 @@
 import { Context, Logger, Schema } from 'koishi';
 
+import { isEqual } from 'lodash';
 import { IS_DEV } from '../constants';
 import { MCManager } from '../mcsManager';
 import { NapCat } from '../napCat';
@@ -54,7 +55,10 @@ export class GLBot {
           break;
       }
 
-      if (~session.content.indexOf('群群')) {
+      if (
+        isEqual(session.content, '群群') &&
+        !isEqual(session.event.selfId, session.event.user?.id)
+      ) {
         session.send(`群群似杂鱼！大杂鱼喵`);
       }
     });

@@ -45,11 +45,13 @@ export class MCSManagerPanel {
     await this.api.getUserInfo();
 
     await this.handleRemoteServices();
-    await this.getAvailableRemoteInstance();
+    // await this.getAvailableRemoteInstance();
+
+    // this.watchRemoteConnections();
   }
 
   // 获取远程服务及其实例列表 [全量]
-  async handleRemoteServices() {
+  async handleRemoteServices(insertRemotes?: boolean) {
     const remoteList = await this.api.getServiceRemoteList();
     const insertList = [];
 
@@ -74,11 +76,15 @@ export class MCSManagerPanel {
       });
     }
 
-    this.remotes = insertList;
+    if (insertRemotes !== false) {
+      this.remotes = insertList;
+    }
 
     logger.info(
       `已获取到 ${this.remotes.length} 个远程节点及其实例 ${this.remotes.reduce((acc, remote) => acc + remote.instances.length, 0)} 个`,
     );
+
+    return insertList;
   }
 
   // 遍历所有远程节点 选择正在运行中的实力 建立远程连接
@@ -88,6 +94,52 @@ export class MCSManagerPanel {
         this.createMCSManagerConnection(remote, instance.cfg);
       }
     }
+  }
+
+  runingRemoteConnectionsCount(
+    remotes: ServiceRemoteItemCustom[],
+  ): Set<string> {
+    return new Set(
+      Array.from(
+        remotes
+          .map(remote =>
+            remote.instances
+              .map(instance =>
+                isEqual(instance.cfg.status, RemoteInstanceStatusEnum.RUNNING)
+                  ? instance.cfg.instanceUuid
+                  : null,
+              )
+              .filter(Boolean),
+          )
+          .flat(),
+      ),
+    );
+  }
+
+  /// 定时检查远程连接状态
+  watchRemoteConnections() {
+    setInterval(async () => {
+      // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
+
+      const oldUuids = this.runingRemoteConnectionsCount(this.remotes);
+      const newRemotes = await this.handleRemoteServices(false);
+      const newUuids = this.runingRemoteConnectionsCount(newRemotes);
+
+      // 新开的实例
+      for (const uuid of newUuids) {
+        if (!oldUuids.has(uuid)) {
+        }
+      }
+
+      // 关闭的实例
+      for (const uuid of oldUuids) {
+        if (!newUuids.has(uuid)) {
+          // logger.info(
+          //   `远程实例 ${.instance.config.nickname} 连接已关闭`,
+          // );
+        }
+      }
+    }, 1000);
   }
 
   // 创建远程连接
@@ -124,18 +176,18 @@ export class MCSManagerPanel {
         remote.auth = instanceConnectAuth;
       }
 
+      // FIXME: 似乎目前没有ws的需求
       if (remote.auth) {
-        const ws = new MCSManagerWebSocketIO(
-          this.ctx,
-          this.config,
-          this.api,
-          remote,
-          instance,
-          remote.auth,
-        );
-        this.remoteConnectionsMap.set(uuid, ws);
-
-        return ws;
+        // const ws = new MCSManagerWebSocketIO(
+        //   this.ctx,
+        //   this.config,
+        //   this.api,
+        //   remote,
+        //   instance,
+        //   remote.auth,
+        // );
+        // this.remoteConnectionsMap.set(uuid, ws);
+        // return ws;
       }
 
       logger.error(

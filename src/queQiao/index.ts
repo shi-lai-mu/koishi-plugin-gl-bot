@@ -1,5 +1,5 @@
 import { Bot, Context, Logger, Schema, h } from 'koishi';
-import { isString } from 'lodash';
+import { isEqual, isString } from 'lodash';
 import { Rcon } from 'rcon-client';
 import { RawData, WebSocket } from 'ws';
 import { IS_DEV } from '../constants';
@@ -367,7 +367,11 @@ class MinecraftSyncMsg {
     this.ctx.on('message', async session => {
       this.config.watchChannel.forEach(channel => {
         const [platform, channelId] = channel.split(':');
-        if (platform === session.platform && channelId === session.channelId) {
+        if (
+          platform === session.platform &&
+          channelId === session.channelId &&
+          !isEqual(session.event.selfId, session.event.user?.id)
+        ) {
           const msgData: WsMessageData = {
             api: 'broadcast',
             data: {
