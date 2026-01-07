@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { Argv, h } from 'koishi';
+import { BotCommandBase, BotCommandRole } from '../../../gl/commands/base';
 import { MCSManagerBot } from '../../bot';
-import { BotCommandBase, BotCommandRole } from '../base';
 
 /**
  * 服务器创建指令
@@ -15,7 +15,6 @@ export class ARKBotCreateCommand extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async handle(

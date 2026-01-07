@@ -1,9 +1,9 @@
 import { isEmpty, isEqual, merge } from 'lodash';
+import { BotCommandBase } from '../../../gl/commands/base';
 import MinecraftSyncMsg from '../../../queQiao';
 import { formatOnlineTime } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
 import { McUser } from '../../type';
-import { BotCommandBase } from '../base';
 
 export class MCBotGameOnline extends BotCommandBase {
   static list: Record<
@@ -20,7 +20,6 @@ export class MCBotGameOnline extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async getOnlinePlayers(connect: MinecraftSyncMsg) {
@@ -139,7 +138,6 @@ export class MCBotOnlineTimeCommand extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async handle(): Promise<string> {

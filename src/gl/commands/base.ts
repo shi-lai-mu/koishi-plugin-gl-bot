@@ -1,7 +1,6 @@
 import { Argv, Logger } from 'koishi';
 
-import { IS_DEV } from '../../constants';
-import { MCSManagerBot } from '../bot';
+import { MCSManagerBot } from '../../mcsManager/bot';
 
 const logger = new Logger('mcsmanager-command');
 
@@ -23,20 +22,8 @@ export abstract class BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {}
 
-  protected initialize() {
-    if (IS_DEV) {
-      logger.info(`注册 ${this.command} 指令...`);
-    }
-
-    for (const cmdStr of this.command) {
-      this.bot.ctx.command(cmdStr).action(async (argv, ...args) => {
-        return await this.authenticate(argv, args);
-      });
-    }
-  }
-
   // 鉴定权限
-  private async authenticate(cmd: Argv, args: string[]) {
+  public async authenticate(cmd: Argv, args: string[]) {
     // console.log(cmd.session.event);
     const userRole = cmd.session.event.member?.roles?.at(0);
     if (

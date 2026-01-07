@@ -1,11 +1,11 @@
 import { isEqual } from 'lodash';
+import { BotCommandBase } from '../../../gl/commands/base';
 import { formatDuration } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
 import {
   RemoteInstanceStatusEnum,
   RemoteInstanceStatusName,
 } from '../../constants';
-import { BotCommandBase } from '../base';
 
 /**
  * 服务器列表指令
@@ -19,7 +19,6 @@ export class MCBotListCommand extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async readServerProperties(daemonId: string, instanceId: string) {
@@ -27,6 +26,8 @@ export class MCBotListCommand extends BotCommandBase {
   }
 
   async handle(_, status?: string[]): Promise<string> {
+    console.log(status);
+
     await this.bot.panel.handleRemoteServices();
 
     let filteredStatus = status?.at(0) ?? '运行中';

@@ -1,4 +1,4 @@
-export { BotCommandBase } from './base';
+export { BotCommandBase } from '../../gl/commands/base';
 
 export { MCBotHealthCommand } from './mc/health';
 export { MCBotListCommand } from './mc/list';

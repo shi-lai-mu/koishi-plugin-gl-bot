@@ -1,12 +1,12 @@
 import { Argv } from 'koishi';
 import { isString } from 'lodash';
 
+import { BotCommandBase, BotCommandRole } from '../../../gl/commands/base';
 import { MCSManagerBot } from '../../bot';
 import {
   RemoteInstanceStatusEnum,
   RemoteInstanceStatusName,
 } from '../../constants';
-import { BotCommandBase, BotCommandRole } from '../base';
 
 const tempSelections = new Map<number, string>();
 
@@ -22,7 +22,6 @@ export class ARKBotRestartCommand extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async handle({ session }: Argv, args: string[]) {

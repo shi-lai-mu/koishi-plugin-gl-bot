@@ -4,6 +4,7 @@ import { isEqual } from 'lodash';
 import { IS_DEV } from '../constants';
 import { MCManager } from '../mcsManager';
 import { NapCat } from '../napCat';
+import { GLConfig } from './config';
 import { GLQueQiaoAdapter } from './queqiao.adapter';
 
 const logger = new Logger('gl-bot');
@@ -12,6 +13,7 @@ export class GLBot {
   static inject = ['database'];
 
   static Config = Schema.intersect([
+    GLConfig.Base,
     // MinecraftSyncMsg.Config,
     MCManager.Config,
     NapCat.Config,

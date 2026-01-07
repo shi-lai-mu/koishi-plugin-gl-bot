@@ -1,7 +1,7 @@
 import { isNumber } from 'lodash';
+import { BotCommandBase } from '../../../gl/commands/base';
 import MinecraftSyncMsg from '../../../queQiao';
 import { MCSManagerBot } from '../../bot';
-import { BotCommandBase } from '../base';
 
 /**
  * 服务器 健康 指令
@@ -15,7 +15,6 @@ export class MCBotHealthCommand extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async getHealthStatus(connect: MinecraftSyncMsg) {

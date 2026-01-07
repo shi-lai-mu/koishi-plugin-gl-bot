@@ -1,7 +1,7 @@
+import { BotCommandBase, BotCommandRole } from '../../../gl/commands/base';
 import { formatDuration } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
 import { RemoteInstanceStatusName } from '../../constants';
-import { BotCommandBase, BotCommandRole } from '../base';
 
 /**
  * 服务器列表指令
@@ -15,7 +15,6 @@ export class ARKBotListCommand extends BotCommandBase {
 
   constructor(public readonly bot: MCSManagerBot) {
     super(bot);
-    this.initialize();
   }
 
   async handle(_, status?: string[]): Promise<string> {
