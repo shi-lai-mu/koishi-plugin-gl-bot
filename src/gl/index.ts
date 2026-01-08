@@ -1,6 +1,8 @@
 import { Context, Logger, Schema } from 'koishi';
 
 import { isEqual } from 'lodash';
+import { AliYun } from '../ali/client';
+import { AliYunLocalDomain } from '../ali/local.domain';
 import { IS_DEV } from '../constants';
 import { MCManager } from '../mcsManager';
 import { NapCat } from '../napCat';
@@ -23,6 +25,7 @@ export class GLBot {
   public readonly mcsManager: MCManager;
   public readonly queQiaoAdapter: GLQueQiaoAdapter;
   public readonly napCat: NapCat;
+  public readonly ali: AliYun;
 
   constructor(
     private ctx: Context,
@@ -31,7 +34,14 @@ export class GLBot {
     // this.mcSyncMsg = new MinecraftQueQiao(ctx, config);
     this.mcsManager = new MCManager(this, ctx, config);
     this.queQiaoAdapter = new GLQueQiaoAdapter(this, ctx, config);
+    console.log('in');
+
     this.napCat = new NapCat(ctx, config);
+    this.ali = new AliYun('', '');
+    const aliLocalDomain = new AliYunLocalDomain(this.ali);
+
+    aliLocalDomain.updateMainDomainRecordInLocalIP();
+
     this.initialize();
   }
 

@@ -41,7 +41,12 @@
     }
   },
   "dependencies": {
+    "@alicloud/alidns20150109": "^4.1.0",
+    "@alicloud/openapi-client": "^0.4.15",
+    "@alicloud/tea-util": "^1.4.11",
     "@types/ms": "^2.1.0",
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
     "lodash": "^4.17.21",
     "rcon-client": "^4.2.5",
     "socket.io-client": "^4.8.2",
