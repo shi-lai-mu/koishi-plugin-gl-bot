@@ -30,8 +30,12 @@ export class MCSManagerAPI {
     private authCookie?: string,
   ) {}
 
+  public send<T>(url: string | URL, config?: HTTP.RequestConfig) {
+    return this.http<T>(url, config);
+  }
+
   async login(username: string, password: string) {
-    const result = await this.http(`${this.baseUrl}/auth/login`, {
+    const result = await this.send(`${this.baseUrl}/auth/login`, {
       method: 'POST',
       data: {
         username,
@@ -48,7 +52,7 @@ export class MCSManagerAPI {
   }
 
   async getUserInfo() {
-    const result = await this.http<MCManagerPanelResponse<UserInfo>>(
+    const result = await this.send<MCManagerPanelResponse<UserInfo>>(
       `${this.baseUrl}/auth`,
       {
         headers: this.requestHeaders,
@@ -66,7 +70,7 @@ export class MCSManagerAPI {
   async getServiceRemoteList() {
     return (
       (
-        await this.http<MCManagerPanelResponse<ServiceRemoteItem[]>>(
+        await this.send<MCManagerPanelResponse<ServiceRemoteItem[]>>(
           `${this.baseUrl}/service/remote_services_list`,
           {
             headers: this.requestHeaders,
@@ -91,7 +95,7 @@ export class MCSManagerAPI {
   ) {
     return (
       (
-        await this.http<
+        await this.send<
           MCManagerPanelResponse<{
             data: ServiceRemoteInstanceItem[];
           }>
@@ -117,7 +121,7 @@ export class MCSManagerAPI {
   ): Promise<ServiceInstanceConnectAuth | null> {
     return (
       (
-        await this.http<MCManagerPanelResponse<ServiceInstanceConnectAuth>>(
+        await this.send<MCManagerPanelResponse<ServiceInstanceConnectAuth>>(
           `${this.baseUrl}/protected_instance/stream_channel`,
           {
             method: 'POST',
@@ -139,7 +143,7 @@ export class MCSManagerAPI {
   ): Promise<boolean> {
     return (
       (
-        await this.http<
+        await this.send<
           MCManagerPanelResponse<{
             instanceUuid: string;
           }>
@@ -161,7 +165,7 @@ export class MCSManagerAPI {
   ): Promise<boolean> {
     return (
       (
-        await this.http<
+        await this.send<
           MCManagerPanelResponse<{
             instanceUuid: string;
           }>
@@ -183,7 +187,7 @@ export class MCSManagerAPI {
   ): Promise<boolean> {
     return (
       (
-        await this.http<
+        await this.send<
           MCManagerPanelResponse<{
             instanceUuid: string;
           }>
@@ -228,7 +232,7 @@ export class MCSManagerAPI {
       },
     });
 
-    const result = await this.http<
+    const result = await this.send<
       MCManagerPanelResponse<ServiceRemoteInstanceItem>
     >(`${this.baseUrl}/instance`, {
       method: 'POST',
@@ -260,7 +264,7 @@ export class MCSManagerAPI {
     const mergeConfig = Object.assign({}, createInstanceUpload, config);
     const uploadDir = '.';
 
-    const { status, data } = await this.http<
+    const { status, data } = await this.send<
       MCManagerPanelResponse<{
         addr: string;
         instanceUuid: string;
@@ -282,7 +286,7 @@ export class MCSManagerAPI {
       throw new Error('创建实例上传任务失败');
     }
 
-    const newFile = await this.http<MCManagerPanelResponse<{ id: string }>>(
+    const newFile = await this.send<MCManagerPanelResponse<{ id: string }>>(
       `${this.wsUrl}/upload-new/${data.data.password}`,
       {
         headers: this.requestHeaders,
@@ -330,7 +334,7 @@ export class MCSManagerAPI {
           `上传分片: offset=${offset}, size=${chunk.length}, progress=${((end / totalSize) * 100).toFixed(1)}%`,
         );
       }
-      const response = await this.http(
+      const response = await this.send(
         `${this.wsUrl}/upload-piece/${newFile.data.data.id}`,
         {
           method: 'POST',
@@ -364,7 +368,7 @@ export class MCSManagerAPI {
     const formData = new FormData();
     formData.append('file', fileBlob);
 
-    const result = await this.http<MCManagerPanelResponse<null>>(
+    const result = await this.send<MCManagerPanelResponse<null>>(
       `${this.baseUrl}/protected_instance/upload_file`,
       {
         method: 'POST',
@@ -387,7 +391,7 @@ export class MCSManagerAPI {
     instanceId: string,
   ): Promise<Record<string, never>> {
     return (
-      await this.http<MCManagerPanelResponse<Record<string, never>>>(
+      await this.send<MCManagerPanelResponse<Record<string, never>>>(
         `${this.baseUrl}/protected_instance/process_config/file`,
         {
           headers: this.requestHeaders,
@@ -401,6 +405,23 @@ export class MCSManagerAPI {
         },
       )
     ).data.data;
+  }
+
+  async readFile(daemonId: string, instanceId: string, target: string) {
+    return (
+      await this.send<string>(`${this.baseUrl}/files`, {
+        method: 'PUT',
+        headers: this.requestHeaders,
+        params: {
+          daemonId,
+          uuid: instanceId,
+          token: this.userInfo.token,
+        },
+        data: {
+          target,
+        },
+      })
+    ).data;
   }
 }
 

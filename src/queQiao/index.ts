@@ -34,7 +34,7 @@ export interface WsMessageData {
   };
 }
 
-class MinecraftSyncMsg {
+class MinecraftQueQiao {
   public ws: WebSocket | undefined;
   public rcon: Rcon;
   public isDisposing = false;
@@ -51,7 +51,7 @@ class MinecraftSyncMsg {
   constructor(
     public ctx: Context,
     public adapter: GLQueQiaoAdapter,
-    public config: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>,
+    public config: Schemastery.TypeS<typeof MinecraftQueQiao.Config>,
   ) {
     this.initialize();
   }
@@ -397,7 +397,7 @@ class MinecraftSyncMsg {
     this.reconnectIntervalId = setInterval(async () => {
       if (this.reconnectAttempts >= (this.config.maxReconnectCount || 3)) {
         logger.error(
-          `[${this.serverName}] 已达到最大重连次数 (${this.config.maxReconnectCount} 次)，停止重连。`,
+          `[${this.serverName}] 已达到最大重连次数 (${this.config.maxReconnectCount || 3} 次)，停止重连。`,
         );
         this.clearReconnectInterval();
         return;
@@ -652,7 +652,7 @@ class MinecraftSyncMsg {
   }
 }
 
-namespace MinecraftSyncMsg {
+namespace MinecraftQueQiao {
   // export interface Config extends WsConf, RconConf {
   //   sendToChannel: string[];
   //   sendprefix: string;
@@ -700,4 +700,4 @@ namespace MinecraftSyncMsg {
   `;
 }
 
-export default MinecraftSyncMsg;
+export default MinecraftQueQiao;

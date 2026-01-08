@@ -1,6 +1,6 @@
 import { isNumber } from 'lodash';
 import { BotCommandBase } from '../../../gl/commands/base';
-import MinecraftSyncMsg from '../../../queQiao';
+import MinecraftQueQiao from '../../../queQiao';
 import { MCSManagerBot } from '../../bot';
 
 /**
@@ -17,7 +17,7 @@ export class MCBotHealthCommand extends BotCommandBase {
     super(bot);
   }
 
-  async getHealthStatus(connect: MinecraftSyncMsg) {
+  async getHealthStatus(connect: MinecraftQueQiao) {
     const healths = [];
 
     if (!connect.rcon || !connect.rcon.authenticated) {

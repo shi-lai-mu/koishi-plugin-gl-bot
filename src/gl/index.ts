@@ -14,12 +14,12 @@ export class GLBot {
 
   static Config = Schema.intersect([
     GLConfig.Base,
-    // MinecraftSyncMsg.Config,
+    // MinecraftQueQiao.Config,
     MCManager.Config,
     NapCat.Config,
   ]);
 
-  // private mcSyncMsg: MinecraftSyncMsg;
+  // private mcSyncMsg: MinecraftQueQiao;
   public readonly mcsManager: MCManager;
   public readonly queQiaoAdapter: GLQueQiaoAdapter;
   public readonly napCat: NapCat;
@@ -28,7 +28,7 @@ export class GLBot {
     private ctx: Context,
     private config: GLBotConfigType,
   ) {
-    // this.mcSyncMsg = new MinecraftSyncMsg(ctx, config);
+    // this.mcSyncMsg = new MinecraftQueQiao(ctx, config);
     this.mcsManager = new MCManager(this, ctx, config);
     this.queQiaoAdapter = new GLQueQiaoAdapter(this, ctx, config);
     this.napCat = new NapCat(ctx, config);

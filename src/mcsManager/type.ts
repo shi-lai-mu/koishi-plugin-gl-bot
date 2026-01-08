@@ -1,4 +1,4 @@
-import MinecraftSyncMsg from '../queQiao';
+import MinecraftQueQiao from '../queQiao';
 import { RemoteInstanceStatusEnum } from './constants';
 import { MCSManagerInstance } from './instance';
 
@@ -233,5 +233,30 @@ export interface McUser {
   y: number;
   z: number;
 
-  server?: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>;
+  server?: Schemastery.TypeS<typeof MinecraftQueQiao.Config>;
+}
+
+export interface MCSManagerQueQiaoYMLConfig {
+  enable: boolean;
+  debug: boolean;
+  server_name: string;
+  access_token: string;
+  message_prefix: string;
+  websocket_server: { enable: boolean; host: string; port: number };
+  websocket_client: {
+    enable: boolean;
+    reconnect_interval: number;
+    reconnect_max_times: number;
+    url_list: string[];
+  };
+  rcon: { enable: boolean; port: number; password: string };
+  subscribe_event: {
+    player_chat: boolean;
+    player_death: boolean;
+    player_join: boolean;
+    player_quit: boolean;
+    player_command: boolean;
+    player_advancement: boolean;
+  };
+  ignored_commands: [];
 }

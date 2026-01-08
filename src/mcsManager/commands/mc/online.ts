@@ -1,6 +1,6 @@
 import { isEmpty, isEqual, merge } from 'lodash';
 import { BotCommandBase } from '../../../gl/commands/base';
-import MinecraftSyncMsg from '../../../queQiao';
+import MinecraftQueQiao from '../../../queQiao';
 import { formatOnlineTime } from '../../../utils';
 import { MCSManagerBot } from '../../bot';
 import { McUser } from '../../type';
@@ -9,7 +9,7 @@ export class MCBotGameOnline extends BotCommandBase {
   static list: Record<
     string,
     {
-      config: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>;
+      config: Schemastery.TypeS<typeof MinecraftQueQiao.Config>;
       list: Record<string, McUser>;
     }
   > = {};
@@ -22,7 +22,7 @@ export class MCBotGameOnline extends BotCommandBase {
     super(bot);
   }
 
-  async getOnlinePlayers(connect: MinecraftSyncMsg) {
+  async getOnlinePlayers(connect: MinecraftQueQiao) {
     // There are 2 of a max of 2026 players online: xxx, xxxx
     return (
       (await connect.sendRconCommand('list'))
@@ -38,7 +38,7 @@ export class MCBotGameOnline extends BotCommandBase {
     const rconPlayersResults: Record<
       string,
       {
-        config: Schemastery.TypeS<typeof MinecraftSyncMsg.Config>;
+        config: Schemastery.TypeS<typeof MinecraftQueQiao.Config>;
         list: Record<string, Partial<McUser>>;
       }
     > = {};

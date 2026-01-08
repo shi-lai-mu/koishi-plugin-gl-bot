@@ -11,18 +11,18 @@ export class MCManager {
     MCManagerConfig.QueQiao,
   ]);
 
-  private panel: MCSManagerPanel;
+  public panel: MCSManagerPanel;
 
-  private bot: MCSManagerBot;
+  public bot: MCSManagerBot;
 
   constructor(
     public readonly gl: GLBot,
     public readonly ctx: Context,
-    private readonly config: GLBotConfigType,
+    public readonly config: GLBotConfigType,
   ) {
     registerMcSchedule(ctx);
 
-    this.panel = new MCSManagerPanel(ctx, config);
+    this.panel = new MCSManagerPanel(gl, ctx, config);
     this.bot = new MCSManagerBot(this, ctx, config, this.panel);
     ctx.on('ready', this.initialize.bind(this));
   }

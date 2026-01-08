@@ -1,11 +1,15 @@
 import { Context, isEmpty, Logger } from 'koishi';
 import { isEqual } from 'lodash';
 
-import { GLBotConfigType } from '../gl';
+import { GLBot, GLBotConfigType } from '../gl';
 import { MCSManagerAPI } from './api';
 import { RemoteInstanceStatusEnum } from './constants';
 import { MCSManagerInstance } from './instance';
-import { ServiceRemoteInstanceItem, ServiceRemoteItemCustom } from './type';
+import {
+  ServiceRemoteInstanceItem,
+  ServiceRemoteItem,
+  ServiceRemoteItemCustom,
+} from './type';
 import { MCSManagerWebSocketIO } from './ws';
 
 const logger = new Logger('mcsmanager-panel');
@@ -22,6 +26,7 @@ export class MCSManagerPanel {
   remoteConnectionsMap: Map<string, MCSManagerWebSocketIO> = new Map();
 
   constructor(
+    public readonly gl: GLBot,
     public readonly ctx: Context,
     public readonly config: GLBotConfigType,
   ) {
@@ -45,15 +50,19 @@ export class MCSManagerPanel {
     await this.api.getUserInfo();
 
     await this.handleRemoteServices();
+
     // await this.getAvailableRemoteInstance();
 
-    // this.watchRemoteConnections();
+    this.watchRemoteConnections();
   }
 
   // 获取远程服务及其实例列表 [全量]
   async handleRemoteServices(insertRemotes?: boolean) {
-    const remoteList = await this.api.getServiceRemoteList();
-    const insertList = [];
+    const remoteList: ServiceRemoteItem[] =
+      await this.api.getServiceRemoteList();
+    const insertList: ({
+      instances: MCSManagerInstance[];
+    } & ServiceRemoteItem)[] = [];
 
     for (const remote of remoteList) {
       const instanceList = await this.api.getServiceRemoteInstanceList(
@@ -70,6 +79,9 @@ export class MCSManagerPanel {
               this,
               remote,
               item,
+              {
+                autoCreateQueQiao: insertRemotes !== false,
+              },
             ),
         ),
         ...remote,
@@ -80,9 +92,11 @@ export class MCSManagerPanel {
       this.remotes = insertList;
     }
 
-    logger.info(
-      `已获取到 ${this.remotes.length} 个远程节点及其实例 ${this.remotes.reduce((acc, remote) => acc + remote.instances.length, 0)} 个`,
-    );
+    if (insertRemotes !== false) {
+      logger.info(
+        `已获取到 ${this.remotes.length} 个远程节点及其实例 ${this.remotes.reduce((acc, remote) => acc + remote.instances.length, 0)} 个`,
+      );
+    }
 
     return insertList;
   }
@@ -120,7 +134,6 @@ export class MCSManagerPanel {
   watchRemoteConnections() {
     setInterval(async () => {
       // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
-
       const oldUuids = this.runingRemoteConnectionsCount(this.remotes);
       const newRemotes = await this.handleRemoteServices(false);
       const newUuids = this.runingRemoteConnectionsCount(newRemotes);
@@ -128,15 +141,58 @@ export class MCSManagerPanel {
       // 新开的实例
       for (const uuid of newUuids) {
         if (!oldUuids.has(uuid)) {
+          let remoteIndex = 0;
+          let instanceIndex = 0;
+          let instance: MCSManagerInstance | null = null;
+
+          newRemotes.find(r =>
+            r.instances.find(i => {
+              const result = isEqual(i.cfg.instanceUuid, uuid);
+              if (result) {
+                remoteIndex = this.remotes.indexOf(r);
+                instanceIndex = r.instances.indexOf(i);
+                instance = i;
+              }
+              return result;
+            }),
+          );
+
+          if (instance) {
+            console.log('即将尝试链接');
+
+            setTimeout(
+              () => {
+                instance.createQueQiao();
+              },
+              10 * 60 * 1000,
+            );
+
+            this.handleRemoteServices();
+          }
         }
       }
 
       // 关闭的实例
       for (const uuid of oldUuids) {
         if (!newUuids.has(uuid)) {
-          // logger.info(
-          //   `远程实例 ${.instance.config.nickname} 连接已关闭`,
-          // );
+          let remoteIndex = 0;
+          let instanceIndex = 0;
+          let instance: MCSManagerInstance | null;
+
+          this.remotes.find(r =>
+            r.instances.find(i => {
+              const result = isEqual(i.cfg.instanceUuid, uuid);
+              if (result) {
+                remoteIndex = this.remotes.indexOf(r);
+                instanceIndex = r.instances.indexOf(i);
+                instance = i;
+              }
+              return result;
+            }),
+          );
+
+          instance.dispose();
+          this.remotes[remoteIndex].instances.splice(instanceIndex, 1);
         }
       }
     }, 1000);
