@@ -47,13 +47,10 @@ export class AliYun {
       });
     const runtime = new $Util.RuntimeOptions({});
     try {
-      console.log({ describeDomainRecordsRequest, runtime });
       const { body } = await client.describeDomainRecordsWithOptions(
         describeDomainRecordsRequest,
         runtime,
       );
-      console.log({ body });
-
       return body;
     } catch (error) {
       return null;
@@ -65,11 +62,11 @@ export class AliYun {
     domainName: string,
     RR: string,
   ): Promise<$Alidns20150109.DescribeDomainRecordsResponseBodyDomainRecordsRecord | null> {
-    console.log({ domainName });
     const records = await this.fetchDomainRecords(domainName);
-    console.log({ records });
     return records?.domainRecords?.record.find(item => {
-      if (item.RR === RR) return item;
+      if (item.RR === RR) {
+        return item;
+      }
       return false;
     });
   }
@@ -108,19 +105,12 @@ export class AliYun {
     type: DomainRecordsExplorerType,
     value: string,
   ) {
-    console.log({
-      domainName,
-      RR,
-      type,
-      value,
-    });
-
     const findDomain = await this.findSubDomainRecords(domainName, RR);
-    console.log({ findDomain });
 
     if (type === undefined || value === undefined || !findDomain) {
       return false;
     }
+
     // 如果解析值相同则跳出更新
     if (findDomain.value === value && findDomain.type === type) {
       return true;
@@ -146,7 +136,6 @@ export class AliYun {
         updateDomainRecordRequest,
         runtime,
       );
-      console.log(body);
 
       // Logger.custom('schedule').trace(`[${domainName}域名解析更新]: `, body)
       // console.log(value)

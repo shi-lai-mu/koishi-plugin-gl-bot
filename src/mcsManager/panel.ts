@@ -19,6 +19,8 @@ export class MCSManagerPanel {
 
   public readonly api: MCSManagerAPI;
 
+  private watchRemoteClock: NodeJS.Timeout | null = null;
+
   // 所有远程节点及其实例列表
   remotes: ServiceRemoteItemCustom[] = [];
 
@@ -132,7 +134,9 @@ export class MCSManagerPanel {
 
   /// 定时检查远程连接状态
   watchRemoteConnections() {
-    setInterval(async () => {
+    clearInterval(this.watchRemoteClock as NodeJS.Timeout);
+
+    this.watchRemoteClock = setInterval(async () => {
       // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
       const oldUuids = this.runingRemoteConnectionsCount(this.remotes);
       const newRemotes = await this.handleRemoteServices(false);
@@ -300,5 +304,15 @@ export class MCSManagerPanel {
     }
 
     return Array.from(instanceMap.values()).sort((a, b) => b.sort - a.sort);
+  }
+
+  public dispose() {
+    this.remotes.forEach(remote => {
+      remote.instances.forEach(instance => {
+        instance.dispose();
+      });
+    });
+
+    clearInterval(this.watchRemoteClock as NodeJS.Timeout);
   }
 }

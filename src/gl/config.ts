@@ -6,4 +6,10 @@ export class GLConfig {
       .default(false)
       .description('命令注册模式 指令模式/关键词模式'),
   }).description('MCSMANAGER 基础配置');
+
+  static Extends = Schema.object({
+    authKey: Schema.string().role('secret').description('AI服务授权密钥'),
+    authID: Schema.string().role('secret').description('AI服务授权ID'),
+    authSecret: Schema.string().role('secret').description('AI服务授权密钥2'),
+  }).description('MCSMANAGER 基础配置');
 }

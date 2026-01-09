@@ -16,6 +16,7 @@ export class GLBot {
 
   static Config = Schema.intersect([
     GLConfig.Base,
+    GLConfig.Extends,
     // MinecraftQueQiao.Config,
     MCManager.Config,
     NapCat.Config,
@@ -27,6 +28,8 @@ export class GLBot {
   public readonly napCat: NapCat;
   public readonly ali: AliYun;
 
+  private updateDomainRecordsInLocalIPInterval: NodeJS.Timeout | null = null;
+
   constructor(
     private ctx: Context,
     private config: GLBotConfigType,
@@ -34,19 +37,45 @@ export class GLBot {
     // this.mcSyncMsg = new MinecraftQueQiao(ctx, config);
     this.mcsManager = new MCManager(this, ctx, config);
     this.queQiaoAdapter = new GLQueQiaoAdapter(this, ctx, config);
-    console.log('in');
-
     this.napCat = new NapCat(ctx, config);
-    this.ali = new AliYun('', '');
-    const aliLocalDomain = new AliYunLocalDomain(this.ali);
-
-    aliLocalDomain.updateMainDomainRecordInLocalIP();
+    this.ali = new AliYun(config.authID, config.authSecret);
 
     this.initialize();
+    this.updateDomainRecordsInLocalIP();
+
+    this.ctx.on('dispose', async () => {
+      this.dispose();
+      logger.info('GL Bot 已卸载');
+    });
   }
 
   private initialize() {
     this.globalCommand();
+  }
+
+  // 定时更新域名
+  private async updateDomainRecordsInLocalIP() {
+    const key = this.config.authKey;
+    if (!key || !this.ali) {
+      return;
+    }
+
+    const aliLocalDomain = new AliYunLocalDomain(this.ali);
+    aliLocalDomain.updateMainDomainRecordInLocalIP(this.config.authKey);
+
+    clearInterval(this.updateDomainRecordsInLocalIPInterval as NodeJS.Timeout);
+    this.updateDomainRecordsInLocalIPInterval = setInterval(
+      async () =>
+        aliLocalDomain.updateMainDomainRecordInLocalIP(this.config.authKey),
+      1 * 60 * 1000,
+    );
+  }
+
+  public dispose() {
+    clearInterval(this.updateDomainRecordsInLocalIPInterval as NodeJS.Timeout);
+    this.updateDomainRecordsInLocalIPInterval = null;
+
+    this.mcsManager.dispose();
   }
 
   private globalCommand() {

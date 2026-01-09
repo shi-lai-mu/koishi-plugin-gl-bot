@@ -1,6 +1,7 @@
 import { Context, Schema } from 'koishi';
 import { GLBot, GLBotConfigType } from '../gl';
 import { MCSManagerBot } from './bot';
+import { MCBotGameOnline } from './commands';
 import { MCManagerConfig } from './config';
 import { MCSManagerPanel } from './panel';
 import { registerMcSchedule } from './schedules';
@@ -29,6 +30,11 @@ export class MCManager {
 
   async initialize() {
     await this.panel.initialize();
+  }
+
+  public dispose() {
+    this.panel.dispose();
+    MCBotGameOnline.list = {};
   }
 }
 

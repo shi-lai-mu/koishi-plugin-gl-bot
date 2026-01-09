@@ -79,11 +79,11 @@ export class MCSManagerInstance {
       ?.replace(/^https?:\/\//, '')
       .split(':')[0];
     const host = this.cfg.config.pingConfig?.ip || mcsHost || 'localhost';
-    console.log(
-      { mcsHost, host },
-      this.config.mcManagerHost,
-      yml.websocket_server.port,
-    );
+    // console.log(
+    //   { mcsHost, host },
+    //   this.config.mcManagerHost,
+    //   yml.websocket_server.port,
+    // );
 
     this.queQiao = new MinecraftQueQiao(
       this.ctx,
