@@ -112,7 +112,7 @@ export class MCSManagerPanel {
     }
   }
 
-  runingRemoteConnectionsCount(
+  ruiningRemoteConnectionsCount(
     remotes: ServiceRemoteItemCustom[],
   ): Set<string> {
     return new Set(
@@ -138,9 +138,9 @@ export class MCSManagerPanel {
 
     this.watchRemoteClock = setInterval(async () => {
       // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
-      const oldUuids = this.runingRemoteConnectionsCount(this.remotes);
+      const oldUuids = this.ruiningRemoteConnectionsCount(this.remotes);
       const newRemotes = await this.handleRemoteServices(false);
-      const newUuids = this.runingRemoteConnectionsCount(newRemotes);
+      const newUuids = this.ruiningRemoteConnectionsCount(newRemotes);
 
       // 新开的实例
       for (const uuid of newUuids) {
@@ -162,7 +162,10 @@ export class MCSManagerPanel {
           );
 
           if (instance) {
-            console.log('即将尝试链接');
+            logger.info(
+              `[${instance.cfg.config.nickname}] 服务器实例已启动，正在建立远程连接...`,
+            );
+            instance.dispose();
 
             setTimeout(
               () => {

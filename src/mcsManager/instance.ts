@@ -1,4 +1,4 @@
-import { Context } from 'koishi';
+import { Context, Logger } from 'koishi';
 import { isEqual } from 'lodash';
 import YAML from 'yaml';
 
@@ -12,6 +12,8 @@ import {
   ServiceRemoteInstanceItem,
   ServiceRemoteItem,
 } from './type';
+
+const logger = new Logger('mcsmanager-panel');
 
 export class MCSManagerInstance {
   public isAuthenticated = false;
@@ -110,6 +112,7 @@ export class MCSManagerInstance {
 
   // 实例销毁逻辑
   public dispose() {
+    logger.info(`[${this.queQiao?.config.serverName}] 实例已销毁`);
     this.queQiao?.dispose();
   }
 }

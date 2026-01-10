@@ -54,6 +54,9 @@ class MinecraftQueQiao {
     public config: Schemastery.TypeS<typeof MinecraftQueQiao.Config>,
   ) {
     this.initialize();
+    this.config.maxReconnectCount = this.config.maxReconnectCount || 100;
+    this.config.maxReconnectInterval =
+      this.config.maxReconnectInterval || 1000 * 10;
   }
 
   public initialize() {
