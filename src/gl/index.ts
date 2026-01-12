@@ -60,7 +60,9 @@ export class GLBot {
       return;
     }
 
-    const aliLocalDomain = new AliYunLocalDomain(this.ali);
+    const aliLocalDomain = new AliYunLocalDomain(this.ali, {
+      [this.config.authDomain]: { RRs: this.config.authChildDomain || [] },
+    });
     aliLocalDomain.updateMainDomainRecordInLocalIP(this.config.authKey);
 
     clearInterval(this.updateDomainRecordsInLocalIPInterval as NodeJS.Timeout);

@@ -93,6 +93,11 @@ export class MCSManagerAPI {
       page_size?: number;
     },
   ) {
+    console.log({
+      daemonId,
+      options,
+    });
+
     return (
       (
         await this.send<

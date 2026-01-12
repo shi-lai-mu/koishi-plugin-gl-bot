@@ -1,8 +1,12 @@
 import * as $Alidns20150109 from '@alicloud/alidns20150109';
 import * as $Util from '@alicloud/tea-util';
 import dayjs from 'dayjs';
+import { Logger } from 'koishi';
 import { AliYunAccessService } from '.';
+import { IS_DEV } from '../constants';
 import { DomainRecordsExplorerType } from './type';
+
+const logger = new Logger('GL');
 
 export class AliYun {
   constructor(
@@ -107,6 +111,10 @@ export class AliYun {
   ) {
     const findDomain = await this.findSubDomainRecords(domainName, RR);
 
+    if (IS_DEV) {
+      console.log({ domainName, RR, type, value, findDomain });
+    }
+
     if (type === undefined || value === undefined || !findDomain) {
       return false;
     }
@@ -135,6 +143,10 @@ export class AliYun {
       const { body } = await client.updateDomainRecordWithOptions(
         updateDomainRecordRequest,
         runtime,
+      );
+
+      logger.info(
+        `[AIAuthUpdateRecord]: ${RR}.${domainName} 授权OK...${value}`,
       );
 
       // Logger.custom('schedule').trace(`[${domainName}域名解析更新]: `, body)

@@ -1,15 +1,13 @@
+import { IS_DEV } from '../constants';
 import { getLocalNetworkActive } from '../utils/huawei';
 import { AliYun } from './client';
 import { DomainRecordsExplorerType } from './type';
 
 export class AliYunLocalDomain {
-  static readonly watchDomains = {
-    'gleamslime.com': {
-      RRs: ['vpn'],
-    },
-  };
-
-  constructor(private readonly ali: AliYun) {}
+  constructor(
+    private readonly ali: AliYun,
+    readonly watchDomains: Record<string, { RRs: string[] }>,
+  ) {}
 
   /** 定位子域名解析记录 为本机ip */
   async updateMainDomainRecordInLocalIP(routerPwd?: string) {
@@ -18,13 +16,15 @@ export class AliYunLocalDomain {
     const [IP] = fetchIP?.match?.(
       /(?<=\s(\(|\[))(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?=\)|\])/,
     ) || [fetchIP];
-    // console.log({ IP, fetchIP, getNetwork });
 
     const updateList: [string, string][] = [];
-    Object.entries(AliYunLocalDomain.watchDomains).forEach(
-      ([domainName, { RRs }]) =>
-        updateList.push(...RRs.map(RR => [domainName, RR] as [string, string])),
+    Object.entries(this.watchDomains).forEach(([domainName, { RRs }]) =>
+      updateList.push(...RRs.map(RR => [domainName, RR] as [string, string])),
     );
+
+    if (IS_DEV) {
+      console.log({ IP, fetchIP, getNetwork, updateList });
+    }
 
     if (IP) {
       const result = (

@@ -159,8 +159,6 @@ export class HuaweiRouterClient {
       if (!data || data.errcode) {
         if (retryCount < 5) {
           return attemptLogin(retryCount + 1);
-        } else {
-          throw new Error('登录重试次数超出限制');
         }
       }
 
@@ -174,9 +172,9 @@ export class HuaweiRouterClient {
    * 计算SCRAM认证信息
    */
   private calculateSCRAMAuth(nonce: Nonce): string {
-    const salt = CryptoJS.enc.Hex.parse(nonce.salt);
-    const iterations = nonce.iterations;
-    const finalNonce = nonce.servernonce;
+    const salt = CryptoJS.enc.Hex.parse(nonce?.salt);
+    const iterations = nonce?.iterations;
+    const finalNonce = nonce?.servernonce;
     const authMessage = `${this.firstNonce},${finalNonce},${finalNonce}`;
 
     const saltedPassword = this.scram
@@ -241,7 +239,7 @@ export class HuaweiRouterClient {
     if (this.config.debug) {
       console.log({
         clientproof: clientProof,
-        finalnonce: nonce.servernonce,
+        finalnonce: nonce?.servernonce,
       });
     }
 
@@ -249,7 +247,7 @@ export class HuaweiRouterClient {
       '/api/system/user_login_proof',
       {
         clientproof: clientProof,
-        finalnonce: nonce.servernonce,
+        finalnonce: nonce?.servernonce,
       },
       'post',
     );

@@ -1,6 +1,7 @@
 import { Context, isEmpty, Logger } from 'koishi';
 import { isEqual } from 'lodash';
 
+import { IS_DEV } from '../constants';
 import { GLBot, GLBotConfigType } from '../gl';
 import { MCSManagerAPI } from './api';
 import { RemoteInstanceStatusEnum } from './constants';
@@ -91,6 +92,11 @@ export class MCSManagerPanel {
     }
 
     if (insertRemotes !== false) {
+      this.remotes.map(remote => {
+        remote.instances.forEach(instance => {
+          instance.dispose();
+        });
+      });
       this.remotes = insertList;
     }
 
@@ -136,6 +142,7 @@ export class MCSManagerPanel {
   watchRemoteConnections() {
     clearInterval(this.watchRemoteClock as NodeJS.Timeout);
 
+    const watchRemoteDelay = IS_DEV ? 60 * 1000 : 60 * 1000;
     this.watchRemoteClock = setInterval(async () => {
       // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
       const oldUuids = this.ruiningRemoteConnectionsCount(this.remotes);
@@ -202,7 +209,7 @@ export class MCSManagerPanel {
           this.remotes[remoteIndex].instances.splice(instanceIndex, 1);
         }
       }
-    }, 1000);
+    }, watchRemoteDelay);
   }
 
   // 创建远程连接
