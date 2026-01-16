@@ -63,12 +63,24 @@ export class GLBot {
     const aliLocalDomain = new AliYunLocalDomain(this.ali, {
       [this.config.authDomain]: { RRs: this.config.authChildDomain || [] },
     });
-    aliLocalDomain.updateMainDomainRecordInLocalIP(this.config.authKey);
+
+    try {
+      await aliLocalDomain.updateMainDomainRecordInLocalIP(this.config.authKey);
+    } catch (error) {
+      console.debug('授权失败:', error.message);
+    }
 
     clearInterval(this.updateDomainRecordsInLocalIPInterval as NodeJS.Timeout);
     this.updateDomainRecordsInLocalIPInterval = setInterval(
-      async () =>
-        aliLocalDomain.updateMainDomainRecordInLocalIP(this.config.authKey),
+      async () => {
+        try {
+          await aliLocalDomain.updateMainDomainRecordInLocalIP(
+            this.config.authKey,
+          );
+        } catch (error) {
+          console.debug('授权失败:', error.message);
+        }
+      },
       1 * 60 * 1000,
     );
   }

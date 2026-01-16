@@ -80,7 +80,7 @@ export class MCSManagerInstance {
     const mcsHost = this.config.mcManagerHost
       ?.replace(/^https?:\/\//, '')
       .split(':')[0];
-    const host = this.cfg.config.pingConfig?.ip || mcsHost || 'localhost';
+    const host = mcsHost || 'localhost';
     // console.log(
     //   { mcsHost, host },
     //   this.config.mcManagerHost,

@@ -61,52 +61,61 @@ export class MCSManagerPanel {
 
   // 获取远程服务及其实例列表 [全量]
   async handleRemoteServices(insertRemotes?: boolean) {
-    const remoteList: ServiceRemoteItem[] =
-      await this.api.getServiceRemoteList();
-    const insertList: ({
-      instances: MCSManagerInstance[];
-    } & ServiceRemoteItem)[] = [];
+    try {
+      const remoteList: ServiceRemoteItem[] =
+        await this.api.getServiceRemoteList();
+      const insertList: ({
+        instances: MCSManagerInstance[];
+      } & ServiceRemoteItem)[] = [];
 
-    for (const remote of remoteList) {
-      const instanceList = await this.api.getServiceRemoteInstanceList(
-        remote.uuid,
-      );
+      for (const remote of remoteList) {
+        const instanceList = await this.api.getServiceRemoteInstanceList(
+          remote.uuid,
+        );
 
-      insertList.push({
-        instances: instanceList.map(
-          item =>
-            new MCSManagerInstance(
-              this.ctx,
-              this.config,
-              this.api,
-              this,
-              remote,
-              item,
-              {
-                autoCreateQueQiao: insertRemotes !== false,
-              },
-            ),
-        ),
-        ...remote,
-      });
-    }
-
-    if (insertRemotes !== false) {
-      this.remotes.map(remote => {
-        remote.instances.forEach(instance => {
-          instance.dispose();
+        insertList.push({
+          instances: instanceList.map(
+            item =>
+              new MCSManagerInstance(
+                this.ctx,
+                this.config,
+                this.api,
+                this,
+                remote,
+                item,
+                {
+                  autoCreateQueQiao: insertRemotes !== false,
+                },
+              ),
+          ),
+          ...remote,
         });
-      });
-      this.remotes = insertList;
-    }
+      }
 
-    if (insertRemotes !== false) {
-      logger.info(
-        `已获取到 ${this.remotes.length} 个远程节点及其实例 ${this.remotes.reduce((acc, remote) => acc + remote.instances.length, 0)} 个`,
+      if (insertRemotes !== false) {
+        this.remotes.map(remote => {
+          remote.instances.forEach(instance => {
+            instance.dispose();
+          });
+        });
+        this.remotes = insertList;
+      }
+
+      if (insertRemotes !== false) {
+        logger.info(
+          `已获取到 ${this.remotes.length} 个远程节点及其实例 ${this.remotes.reduce((acc, remote) => acc + remote.instances.length, 0)} 个`,
+        );
+      }
+
+      return insertList;
+    } catch (error) {
+      // 静默处理网络错误，避免在定时任务中抛出
+      console.debug(
+        'MCSManagerPanel.handleRemoteServices failed:',
+        error.message,
       );
+      return [];
     }
-
-    return insertList;
   }
 
   // 遍历所有远程节点 选择正在运行中的实力 建立远程连接
@@ -144,70 +153,81 @@ export class MCSManagerPanel {
 
     const watchRemoteDelay = IS_DEV ? 60 * 1000 : 60 * 1000;
     this.watchRemoteClock = setInterval(async () => {
-      // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
-      const oldUuids = this.ruiningRemoteConnectionsCount(this.remotes);
-      const newRemotes = await this.handleRemoteServices(false);
-      const newUuids = this.ruiningRemoteConnectionsCount(newRemotes);
+      try {
+        // 重新获取远程服务及其实例列表 对比 现有连接状态 分出 关闭/新开启的实例
+        const oldUuids = this.ruiningRemoteConnectionsCount(this.remotes);
+        const newRemotes = await this.handleRemoteServices(false);
+        const newUuids = this.ruiningRemoteConnectionsCount(newRemotes);
 
-      // 新开的实例
-      for (const uuid of newUuids) {
-        if (!oldUuids.has(uuid)) {
-          let remoteIndex = 0;
-          let instanceIndex = 0;
-          let instance: MCSManagerInstance | null = null;
+        // 新开的实例
+        for (const uuid of newUuids) {
+          if (!oldUuids.has(uuid)) {
+            let remoteIndex = 0;
+            let instanceIndex = 0;
+            let instance: MCSManagerInstance | null = null;
 
-          newRemotes.find(r =>
-            r.instances.find(i => {
-              const result = isEqual(i.cfg.instanceUuid, uuid);
-              if (result) {
-                remoteIndex = this.remotes.indexOf(r);
-                instanceIndex = r.instances.indexOf(i);
-                instance = i;
-              }
-              return result;
-            }),
-          );
-
-          if (instance) {
-            logger.info(
-              `[${instance.cfg.config.nickname}] 服务器实例已启动，正在建立远程连接...`,
-            );
-            instance.dispose();
-
-            setTimeout(
-              () => {
-                instance.createQueQiao();
-              },
-              10 * 60 * 1000,
+            newRemotes.find(r =>
+              r.instances.find(i => {
+                const result = isEqual(i.cfg.instanceUuid, uuid);
+                if (result) {
+                  remoteIndex = this.remotes.indexOf(r);
+                  instanceIndex = r.instances.indexOf(i);
+                  instance = i;
+                }
+                return result;
+              }),
             );
 
-            this.handleRemoteServices();
+            if (instance) {
+              logger.info(
+                `[${instance.cfg.config.nickname}] 服务器实例已启动，正在建立远程连接...`,
+              );
+              instance.dispose();
+
+              setTimeout(
+                () => {
+                  instance.createQueQiao();
+                },
+                10 * 60 * 1000,
+              );
+
+              // 异步调用，避免阻塞
+              this.handleRemoteServices().catch(error => {
+                console.debug(
+                  '定时任务中handleRemoteServices调用失败:',
+                  error.message,
+                );
+              });
+            }
           }
         }
-      }
 
-      // 关闭的实例
-      for (const uuid of oldUuids) {
-        if (!newUuids.has(uuid)) {
-          let remoteIndex = 0;
-          let instanceIndex = 0;
-          let instance: MCSManagerInstance | null;
+        // 关闭的实例
+        for (const uuid of oldUuids) {
+          if (!newUuids.has(uuid)) {
+            let remoteIndex = 0;
+            let instanceIndex = 0;
+            let instance: MCSManagerInstance | null;
 
-          this.remotes.find(r =>
-            r.instances.find(i => {
-              const result = isEqual(i.cfg.instanceUuid, uuid);
-              if (result) {
-                remoteIndex = this.remotes.indexOf(r);
-                instanceIndex = r.instances.indexOf(i);
-                instance = i;
-              }
-              return result;
-            }),
-          );
+            this.remotes.find(r =>
+              r.instances.find(i => {
+                const result = isEqual(i.cfg.instanceUuid, uuid);
+                if (result) {
+                  remoteIndex = this.remotes.indexOf(r);
+                  instanceIndex = r.instances.indexOf(i);
+                  instance = i;
+                }
+                return result;
+              }),
+            );
 
-          instance.dispose();
-          this.remotes[remoteIndex].instances.splice(instanceIndex, 1);
+            instance.dispose();
+            this.remotes[remoteIndex].instances.splice(instanceIndex, 1);
+          }
         }
+      } catch (error) {
+        // 静默处理定时任务中的网络错误
+        console.debug('MCSManager定时任务执行失败:', error.message);
       }
     }, watchRemoteDelay);
   }

@@ -68,19 +68,28 @@ export class MCSManagerAPI {
   }
 
   async getServiceRemoteList() {
-    return (
-      (
-        await this.send<MCManagerPanelResponse<ServiceRemoteItem[]>>(
-          `${this.baseUrl}/service/remote_services_list`,
-          {
-            headers: this.requestHeaders,
-            params: {
-              token: this.userInfo.token,
+    try {
+      return (
+        (
+          await this.send<MCManagerPanelResponse<ServiceRemoteItem[]>>(
+            `${this.baseUrl}/service/remote_services_list`,
+            {
+              headers: this.requestHeaders,
+              params: {
+                token: this.userInfo.token,
+              },
             },
-          },
-        )
-      ).data.data ?? []
-    );
+          )
+        ).data.data ?? []
+      );
+    } catch (error) {
+      // 静默处理网络错误，避免在定时任务中抛出
+      console.debug(
+        'MCSManagerAPI.getServiceRemoteList failed:',
+        error.message,
+      );
+      return [];
+    }
   }
 
   async getServiceRemoteInstanceList(

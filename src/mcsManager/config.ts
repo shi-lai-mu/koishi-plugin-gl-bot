@@ -21,6 +21,9 @@ export class MCManagerConfig {
 
   static QueQiao = Schema.object({
     queQiaoEnable: Schema.boolean().default(false).description('是否启用鹊桥'),
+    maxReconnectCount: Schema.number()
+      .default(5)
+      .description('最大重连次数，防止死循环重连'),
     queQiaoSendToChannel: Schema.array(String).description(
       '消息发送到目标群组格式{platform}:{groupId}',
     ),
